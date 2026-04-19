@@ -1,0 +1,505 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import DashboardHome from "./components/DashboardHome";
+import Sidebar from "./components/layout/Sidebar";
+import Topbar from "./components/layout/Topbar";
+import ReportWizard from "./components/report-wizard/ReportWizard";
+import { emissionTrend } from "./data/mockData";
+import {
+  downloadShipmentPdf,
+  listDefaultValues,
+  listPlans,
+  listShipments,
+} from "./lib/api";
+
+const sectorLabels = {
+  iron_steel: "Demir-Çelik",
+  aluminum: "Alüminyum",
+  cement: "Çimento",
+  fertilizers: "Gübre",
+  electricity: "Elektrik",
+  hydrogen: "Hidrojen",
+};
+
+const routeLabels = {
+  carbon_steel_bf_bof: "BF/BOF",
+  carbon_steel_dri_eaf: "DRI/EAF",
+  scrap_eaf: "Hurda EAF",
+  primary_aluminium: "Primary",
+  primary_aluminum: "Primary",
+  secondary_aluminium: "Secondary",
+  secondary_aluminum: "Secondary",
+};
+
+function getSectorLabel(value) {
+  return sectorLabels[value] || value || "-";
+}
+
+function getRouteLabel(value) {
+  return routeLabels[value] || value || "-";
+}
+
+function hasFeatureAccess(workspaceAccess, featureKey) {
+  if (!workspaceAccess) {
+    return false;
+  }
+
+  if (workspaceAccess.trial_status === "active") {
+    return true;
+  }
+
+  return workspaceAccess.accessible_feature_keys.includes(featureKey);
+}
+
+function UsageMeter({ label, used = 0, limit = 0 }) {
+  const percentage = limit > 0 ? Math.min(Math.round((used / limit) * 100), 100) : 0;
+
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-sm font-semibold text-slate-700">{label}</div>
+        <div className="text-sm font-bold text-ink">
+          {used} / {limit}
+        </div>
+      </div>
+      <div className="mt-3 h-2 rounded-full bg-white">
+        <div className="h-2 rounded-full bg-pine" style={{ width: `${percentage}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function ArchiveView({ shipments, loading, error }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sectorFilter, setSectorFilter] = useState("all");
+  const [downloadingId, setDownloadingId] = useState("");
+
+  const statusOptions = useMemo(
+    () => [...new Set(shipments.map((shipment) => shipment.calculation.compliance_status_label))],
+    [shipments],
+  );
+  const sectorOptions = useMemo(
+    () => [...new Set(shipments.map((shipment) => shipment.payload.goods.sector))],
+    [shipments],
+  );
+
+  const filteredShipments = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
+    return shipments.filter((shipment) => {
+      const matchesSearch =
+        query.length === 0 ||
+        shipment.payload.import_details.shipment_reference.toLowerCase().includes(query) ||
+        shipment.payload.facility.installation_name.toLowerCase().includes(query);
+      const matchesStatus =
+        statusFilter === "all" || shipment.calculation.compliance_status_label === statusFilter;
+      const matchesSector =
+        sectorFilter === "all" || shipment.payload.goods.sector === sectorFilter;
+
+      return matchesSearch && matchesStatus && matchesSector;
+    });
+  }, [searchTerm, shipments, statusFilter, sectorFilter]);
+
+  const handleDownload = async (shipmentId) => {
+    setDownloadingId(shipmentId);
+    try {
+      await downloadShipmentPdf(shipmentId);
+    } finally {
+      setDownloadingId("");
+    }
+  };
+
+  return (
+    <div className="panel p-6">
+      <div className="text-sm font-semibold text-slate-500">Arşiv</div>
+      <h2 className="mt-1 text-2xl font-extrabold text-ink">Canlı CBAM kayıt arşivi</h2>
+      <p className="mt-2 max-w-3xl text-sm text-slate-600">
+        Uyum durumuna, sektöre ve referansa göre filtreleyin; eski beyan PDF’lerini tek tıkla yeniden indirin.
+      </p>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-[1.4fr_1fr_1fr]">
+        <input
+          className="field"
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          placeholder="Referans veya firma ara"
+        />
+        <select className="field" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+          <option value="all">Tüm durumlar</option>
+          {statusOptions.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+        <select className="field" value={sectorFilter} onChange={(event) => setSectorFilter(event.target.value)}>
+          <option value="all">Tüm sektörler</option>
+          {sectorOptions.map((sector) => (
+            <option key={sector} value={sector}>
+              {getSectorLabel(sector)}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {loading ? <p className="mt-4 text-sm text-slate-600">Kayıtlar yükleniyor...</p> : null}
+      {!loading && error ? <p className="mt-4 text-sm font-medium text-clay">{error}</p> : null}
+      {!loading && filteredShipments.length === 0 ? (
+        <p className="mt-4 text-sm text-slate-600">Filtrelere uyan kayıt bulunmuyor.</p>
+      ) : null}
+      {!loading && filteredShipments.length > 0 ? (
+        <div className="mt-6 overflow-x-auto">
+          <table className="min-w-full text-left">
+            <thead>
+              <tr className="border-b border-slate-200 text-sm text-slate-500">
+                <th className="pb-3 font-semibold">Referans</th>
+                <th className="pb-3 font-semibold">Firma</th>
+                <th className="pb-3 font-semibold">Sektör</th>
+                <th className="pb-3 font-semibold">Durum</th>
+                <th className="pb-3 font-semibold">Veri Güveni</th>
+                <th className="pb-3 font-semibold">Emisyon</th>
+                <th className="pb-3 font-semibold">Aksiyon</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredShipments.map((shipment) => (
+                <tr key={shipment.shipment_id} className="border-b border-slate-100 text-sm text-slate-700">
+                  <td className="py-4 font-semibold">{shipment.payload.import_details.shipment_reference}</td>
+                  <td className="py-4">{shipment.payload.facility.installation_name}</td>
+                  <td className="py-4">{getSectorLabel(shipment.payload.goods.sector)}</td>
+                  <td className="py-4">{shipment.calculation.compliance_status_label}</td>
+                  <td className="py-4">{shipment.calculation.confidence_label}</td>
+                  <td className="py-4">{shipment.calculation.total_embedded_emissions_tco2} tCO2e</td>
+                  <td className="py-4">
+                    <button
+                      type="button"
+                      className="btn-secondary px-4 py-2"
+                      onClick={() => handleDownload(shipment.shipment_id)}
+                      disabled={downloadingId === shipment.shipment_id}
+                    >
+                      {downloadingId === shipment.shipment_id ? "Hazırlanıyor..." : "PDF'i Yeniden İndir"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function CoefficientsView({ coefficients, loading, error }) {
+  return (
+    <div className="panel p-6">
+      <div className="text-sm font-semibold text-slate-500">Katsayılar</div>
+      <h2 className="mt-1 text-2xl font-extrabold text-ink">Canlı varsayılan değer kataloğu</h2>
+      <p className="mt-2 max-w-3xl text-sm text-slate-600">
+        Bu ekran backend’deki referans değer tablosundan beslenir ve hesap motorunun kullandığı default benchmark’ları gösterir.
+      </p>
+      {loading ? <p className="mt-4 text-sm text-slate-600">Katsayılar yükleniyor...</p> : null}
+      {!loading && error ? <p className="mt-4 text-sm font-medium text-clay">{error}</p> : null}
+      {!loading && !error && coefficients.length === 0 ? (
+        <p className="mt-4 text-sm text-slate-600">Henüz katsayı kaydı bulunmuyor.</p>
+      ) : null}
+      {!loading && coefficients.length > 0 ? (
+        <div className="mt-6 overflow-x-auto">
+          <table className="min-w-full text-left">
+            <thead>
+              <tr className="border-b border-slate-200 text-sm text-slate-500">
+                <th className="pb-3 font-semibold">CN Kodu</th>
+                <th className="pb-3 font-semibold">Sektör</th>
+                <th className="pb-3 font-semibold">Menşe</th>
+                <th className="pb-3 font-semibold">Rota</th>
+                <th className="pb-3 font-semibold">Toplam Değer</th>
+              </tr>
+            </thead>
+            <tbody>
+              {coefficients.map((row) => (
+                <tr key={`${row.cn_code}-${row.origin_country}-${row.production_route}`} className="border-b border-slate-100 text-sm text-slate-700">
+                  <td className="py-4 font-semibold">{row.cn_code}</td>
+                  <td className="py-4">{getSectorLabel(row.sector)}</td>
+                  <td className="py-4">{row.origin_country}</td>
+                  <td className="py-4">{getRouteLabel(row.production_route)}</td>
+                  <td className="py-4">{row.specific_total_emissions_tco2_per_ton}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function SettingsView({ planCatalog, loading, error }) {
+  if (loading) {
+    return <div className="panel p-6 text-sm text-slate-600">Plan ve yetkilendirme yükleniyor...</div>;
+  }
+
+  if (error || !planCatalog) {
+    return <div className="panel p-6 text-sm font-medium text-clay">{error || "Plan bilgisi alınamadı."}</div>;
+  }
+
+  const { current_access: currentAccess, plans, trial_days: trialDays } = planCatalog;
+  const featureKeys = [...new Set(plans.flatMap((plan) => plan.features.map((feature) => feature.key)))];
+  const featureMap = Object.fromEntries(
+    plans.flatMap((plan) => plan.features.map((feature) => [feature.key, feature])),
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="panel p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="text-sm font-semibold text-slate-500">Plan ve Yetkilendirme</div>
+            <h2 className="mt-1 text-2xl font-extrabold text-ink">7 günlük full trial ile tüm süreci görün</h2>
+            <p className="mt-2 max-w-3xl text-sm text-slate-600">
+              Freemium yerine tüm modülleri açan bir trial kurgusu aktif. Trial bittikten sonra kullanım limiti ve RBAC kuralları seçilen plana göre devreye girer.
+            </p>
+          </div>
+          <div className="rounded-3xl bg-[#0E4FAF] px-5 py-4 text-white">
+            <div className="text-xs uppercase tracking-[0.24em] text-white/70">Aktif Erişim</div>
+            <div className="mt-2 text-lg font-extrabold">{currentAccess.role_label}</div>
+            <div className="mt-1 text-sm text-white/80">
+              {currentAccess.trial_status === "active"
+                ? `${currentAccess.trial_days_remaining}/${trialDays} gün full trial`
+                : currentAccess.active_plan}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-3">
+        {plans.map((plan) => (
+          <article
+            key={plan.plan_id}
+            className={`panel p-6 ${plan.recommended ? "ring-2 ring-pine/20" : ""}`}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-sm font-semibold text-slate-500">{plan.name}</div>
+                <h3 className="mt-1 text-2xl font-extrabold text-ink">EUR {plan.monthly_price_eur}/ay</h3>
+              </div>
+              {plan.recommended ? (
+                <div className="rounded-full bg-pine/10 px-3 py-1 text-xs font-semibold text-pine">Önerilen</div>
+              ) : null}
+            </div>
+            <p className="mt-3 text-sm text-slate-600">{plan.tagline}</p>
+
+            <div className="mt-5 space-y-3">
+              <UsageMeter
+                label="Rapor / ay"
+                used={currentAccess.usage_counters.reports_per_month}
+                limit={plan.usage_limits.reports_per_month}
+              />
+              <UsageMeter
+                label="Supplier request"
+                used={currentAccess.usage_counters.supplier_requests}
+                limit={plan.usage_limits.supplier_requests}
+              />
+              <UsageMeter
+                label="Takım üyesi"
+                used={currentAccess.usage_counters.team_members}
+                limit={plan.usage_limits.team_members}
+              />
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="panel p-6">
+          <div className="text-sm font-semibold text-slate-500">RBAC Özellik Matrisi</div>
+          <h3 className="mt-1 text-xl font-bold text-ink">Plan bazlı erişim ayrımı</h3>
+          <div className="mt-6 overflow-x-auto">
+            <table className="min-w-full text-left">
+              <thead>
+                <tr className="border-b border-slate-200 text-sm text-slate-500">
+                  <th className="pb-3 font-semibold">Özellik</th>
+                  {plans.map((plan) => (
+                    <th key={plan.plan_id} className="pb-3 font-semibold">
+                      {plan.name}
+                    </th>
+                  ))}
+                  <th className="pb-3 font-semibold">Şu an</th>
+                </tr>
+              </thead>
+              <tbody>
+                {featureKeys.map((featureKey) => (
+                  <tr key={featureKey} className="border-b border-slate-100 text-sm text-slate-700">
+                    <td className="py-4">
+                      <div className="font-semibold">{featureMap[featureKey]?.label}</div>
+                      <div className="mt-1 text-xs text-slate-500">{featureMap[featureKey]?.description}</div>
+                    </td>
+                    {plans.map((plan) => (
+                      <td key={`${plan.plan_id}-${featureKey}`} className="py-4">
+                        {plan.features.some((feature) => feature.key === featureKey) ? "Var" : "-"}
+                      </td>
+                    ))}
+                    <td className="py-4">
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${hasFeatureAccess(currentAccess, featureKey) ? "bg-pine/10 text-pine" : "bg-slate-100 text-slate-500"}`}>
+                        {hasFeatureAccess(currentAccess, featureKey) ? "Erişim açık" : "Kilitli"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="panel p-6">
+          <div className="text-sm font-semibold text-slate-500">Kullanım Limiti</div>
+          <h3 className="mt-1 text-xl font-bold text-ink">Mevcut trial tüketimi</h3>
+          <div className="mt-5 space-y-4">
+            <UsageMeter
+              label="Rapor / ay"
+              used={currentAccess.usage_counters.reports_per_month}
+              limit={currentAccess.usage_limits.reports_per_month}
+            />
+            <UsageMeter
+              label="Supplier request"
+              used={currentAccess.usage_counters.supplier_requests}
+              limit={currentAccess.usage_limits.supplier_requests}
+            />
+            <UsageMeter
+              label="Takım üyesi"
+              used={currentAccess.usage_counters.team_members}
+              limit={currentAccess.usage_limits.team_members}
+            />
+          </div>
+
+          <div className="mt-6 rounded-2xl bg-mist p-4">
+            <div className="text-sm font-semibold text-ink">Trial kuralı</div>
+            <p className="mt-2 text-sm text-slate-600">
+              Trial aktifken Supplier Data Collection dahil tüm özellikler açılır. Trial sonrası erişim, plan seviyesi ve rol bazlı yetki kuralına göre filtrelenir.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [activeView, setActiveView] = useState("dashboard");
+  const [shipments, setShipments] = useState([]);
+  const [coefficients, setCoefficients] = useState([]);
+  const [planCatalog, setPlanCatalog] = useState(null);
+  const [loadingShipments, setLoadingShipments] = useState(true);
+  const [loadingCoefficients, setLoadingCoefficients] = useState(true);
+  const [loadingPlans, setLoadingPlans] = useState(true);
+  const [shipmentsError, setShipmentsError] = useState("");
+  const [coefficientsError, setCoefficientsError] = useState("");
+  const [plansError, setPlansError] = useState("");
+
+  const loadShipments = useCallback(async () => {
+    try {
+      setLoadingShipments(true);
+      setShipmentsError("");
+      const shipmentData = await listShipments();
+      setShipments(shipmentData);
+    } catch (error) {
+      setShipmentsError(error.message || "Rapor kayıtları yüklenemedi.");
+    } finally {
+      setLoadingShipments(false);
+    }
+  }, []);
+
+  const loadCoefficients = useCallback(async () => {
+    try {
+      setLoadingCoefficients(true);
+      setCoefficientsError("");
+      const coefficientData = await listDefaultValues();
+      setCoefficients(coefficientData);
+    } catch (error) {
+      setCoefficientsError(error.message || "Katsayı kataloğu yüklenemedi.");
+    } finally {
+      setLoadingCoefficients(false);
+    }
+  }, []);
+
+  const loadPlans = useCallback(async () => {
+    try {
+      setLoadingPlans(true);
+      setPlansError("");
+      const planData = await listPlans();
+      setPlanCatalog(planData);
+    } catch (error) {
+      setPlansError(error.message || "Plan kataloğu yüklenemedi.");
+    } finally {
+      setLoadingPlans(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadShipments();
+    loadCoefficients();
+    loadPlans();
+  }, [loadShipments, loadCoefficients, loadPlans]);
+
+  const liveTrend = useMemo(() => {
+    if (shipments.length === 0) {
+      return emissionTrend;
+    }
+    return shipments.slice(0, 6).reverse().map((shipment, index) => ({
+      month: `K${index + 1}`,
+      value: Number(shipment.calculation.total_embedded_emissions_tco2) || 0,
+    }));
+  }, [shipments]);
+
+  const renderView = () => {
+    switch (activeView) {
+      case "yeni-rapor":
+        return <ReportWizard onShipmentCreated={loadShipments} />;
+      case "arsiv":
+        return <ArchiveView shipments={shipments} loading={loadingShipments} error={shipmentsError} />;
+      case "katsayilar":
+        return (
+          <CoefficientsView
+            coefficients={coefficients}
+            loading={loadingCoefficients}
+            error={coefficientsError}
+          />
+        );
+      case "ayarlar":
+        return <SettingsView planCatalog={planCatalog} loading={loadingPlans} error={plansError} />;
+      default:
+        return (
+          <DashboardHome
+            trendData={liveTrend}
+            shipments={shipments}
+            loading={loadingShipments}
+            error={shipmentsError}
+            workspaceAccess={planCatalog?.current_access || null}
+          />
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(135,169,107,0.28),_transparent_32%),linear-gradient(180deg,#f8faf6_0%,#eef3eb_100%)] p-4 lg:p-6">
+      <div className="mx-auto grid max-w-[1600px] gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <Sidebar
+          activeView={activeView}
+          onChangeView={setActiveView}
+          workspaceAccess={planCatalog?.current_access || null}
+        />
+
+        <main className="min-w-0">
+          <Topbar
+            activeView={activeView}
+            onStartReport={() => setActiveView("yeni-rapor")}
+            workspaceAccess={planCatalog?.current_access || null}
+          />
+          {renderView()}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default App;

@@ -1,0 +1,6 @@
+#!/Users/goker/KarbonRaporum/2026-04-19-persona-sen-k-demli-bir-full/.venv/bin/python3.11
+import sys
+from pip._internal.cli.main import main
+if __name__ == '__main__':
+    sys.argv[0] = sys.argv[0].removesuffix('.exe')
+    sys.exit(main())

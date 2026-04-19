@@ -1,0 +1,94 @@
+{
+  "declarant": {
+    "declarant_name": "Example Importer GmbH",
+    "declarant_eori": "DE123456789000",
+    "cbam_account_number": "CBAM-DE-2026-000045",
+    "member_state_of_establishment": "DE",
+    "importer_name": "Example Importer GmbH",
+    "importer_eori": "DE123456789000"
+  },
+  "import_details": {
+    "shipment_reference": "TR-STEEL-2026-0001",
+    "customs_declaration_number": "MRN26DE0001234567",
+    "import_date": "2026-02-14",
+    "customs_procedure": "release_for_free_circulation",
+    "country_of_origin": "TR",
+    "country_of_dispatch": "TR",
+    "destination_member_state": "DE",
+    "quantity_tons": 1250.0,
+    "supplementary_unit_quantity": 1250.0
+  },
+  "goods": {
+    "sector": "iron_steel",
+    "material_type": "coil",
+    "cn_code": "72082520",
+    "goods_description": "Hot-rolled flat steel coils",
+    "is_complex_good": false,
+    "net_mass_kg": 1250000.0,
+    "origin_installation_country": "TR"
+  },
+  "facility": {
+    "installation_id": "TR-CBAM-STEEL-01",
+    "installation_name": "Marmara Steel Works",
+    "country_code": "TR",
+    "city": "Kocaeli",
+    "address_line": "Dilovasi Organized Industrial Zone",
+    "postal_code": "41455",
+    "operator": {
+      "operator_name": "Marmara Steel A.S.",
+      "contact_person": "Ayse Demir",
+      "email": "cbam@marmarasteel.example",
+      "phone": "+90-262-555-0000"
+    }
+  },
+  "reporting": {
+    "reporting_period_start": "2026-01-01",
+    "reporting_period_end": "2026-12-31",
+    "declaration_year": 2026
+  },
+  "production": {
+    "production_method": "hot_rolled_flat_products",
+    "production_route": "carbon_steel_bf_bof",
+    "produced_quantity_tons": 1250.0,
+    "functional_unit": "tonne_of_goods",
+    "process_description": "Imported hot-rolled coil subject to default-value based reporting"
+  },
+  "methodology": {
+    "calculation_method": "default",
+    "monitoring_plan_reference": null,
+    "monitoring_plan_version": null,
+    "measurement_method_description": null,
+    "data_quality_notes": "Exporter did not provide verified actual emissions; backend falls back to the configured 2026 default values.",
+    "default_value_share": 1.0,
+    "uses_actual_electricity_data": false,
+    "actual_electricity_evidence_reference": null
+  },
+  "energy_inputs": [],
+  "precursor_inputs": [],
+  "emissions": {
+    "direct_process_emissions_tco2": 0.0,
+    "precursor_emissions_tco2": 0.0,
+    "non_attributed_emissions_tco2": 0.0
+  },
+  "carbon_price": {
+    "carbon_price_paid_eur": 0.0,
+    "carbon_price_scheme": null,
+    "rebate_or_other_compensation_eur": 0.0,
+    "evidence_reference": null
+  },
+  "verification": {
+    "verification_status": "pending",
+    "verifier_name": null,
+    "verifier_accreditation_number": null,
+    "verification_report_reference": null,
+    "verification_date": null,
+    "installation_visit_performed": null
+  },
+  "declaration_assets": {
+    "company_name_for_pdf": "Example Importer GmbH",
+    "logo_path": null,
+    "signatory_name": "Max Mustermann",
+    "signatory_title": "Authorized CBAM Declarant",
+    "show_stamp_box": true
+  }
+}
