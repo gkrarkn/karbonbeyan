@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker
 
