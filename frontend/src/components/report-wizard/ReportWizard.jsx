@@ -8,7 +8,7 @@ function getSteps(locale) {
   return [
     { id: "urun", title: t(locale, "Ürün ve Sevkiyat", "Product and Shipment"), description: t(locale, "CN kodu, menşe, miktar", "CN code, origin, quantity") },
     { id: "tesis", title: t(locale, "Tesis Bilgileri", "Facility Details"), description: t(locale, "Kuruluş ve operatör detayları", "Installation and operator details") },
-    { id: "uretim", title: t(locale, "Üretim ve Yöntem", "Production and Method"), description: t(locale, "Rota, period, actual/default", "Route, period, actual/default") },
+    { id: "uretim", title: t(locale, "Üretim ve Yöntem", "Production and Method"), description: t(locale, "Rota, dönem, gerçek/varsayılan veri", "Route, period, actual/default data") },
     { id: "dogrula", title: t(locale, "Kontrol ve Gönder", "Review and Submit"), description: t(locale, "Özet, PDF ve hesaplama", "Summary, PDF and calculation") },
   ];
 }
@@ -40,30 +40,118 @@ const initialForm = {
 };
 
 const glossary = {
-  bf_bof: "BF/BOF, yüksek fırın ve bazik oksijen fırını hattını ifade eder. Primer çelik üretiminde kullanılır.",
-  secondary_aluminium: "Secondary Aluminium, hurda bazlı geri kazanılmış alüminyum üretim rotasıdır.",
-  monitoring_plan: "Monitoring Plan, emisyon verisinin nasıl toplandığını ve hangi kanıtlarla desteklendiğini açıklayan yöntem dokümanıdır.",
+  bf_bof: {
+    tr: "BF/BOF, yüksek fırın ve bazik oksijen fırını hattını ifade eder. Birincil çelik üretiminde kullanılır.",
+    en: "BF/BOF refers to the blast furnace and basic oxygen furnace route used in primary steel production.",
+  },
+  secondary_aluminium: {
+    tr: "İkincil alüminyum, hurda bazlı geri kazanılmış alüminyum üretim rotasını ifade eder.",
+    en: "Secondary aluminium refers to the recycled, scrap-based aluminium production route.",
+  },
+  monitoring_plan: {
+    tr: "İzleme planı, emisyon verisinin nasıl toplandığını ve hangi kanıtlarla desteklendiğini açıklayan yöntem dokümanıdır.",
+    en: "The monitoring plan describes how emissions data is collected and which evidence supports it.",
+  },
+  actual_data: {
+    tr: "Gerçek veri, üreticiden veya tesisten gelen emisyon verisidir. Doğrulanmışsa veri güveni yükselir.",
+    en: "Actual data is emissions data provided by the producer or installation. When verified, it improves confidence.",
+  },
 };
 
-function Tooltip({ term }) {
+const routeOptions = {
+  iron_steel: [
+    { value: "carbon_steel_bf_bof", tr: "Karbon Çelik BF/BOF", en: "Carbon Steel BF/BOF" },
+    { value: "carbon_steel_dri_eaf", tr: "Karbon Çelik DRI/EAF", en: "Carbon Steel DRI/EAF" },
+    { value: "scrap_eaf", tr: "Hurda EAF", en: "Scrap EAF" },
+  ],
+  aluminum: [
+    { value: "primary_aluminium", tr: "Birincil Alüminyum", en: "Primary Aluminium" },
+    { value: "secondary_aluminium", tr: "İkincil Alüminyum", en: "Secondary Aluminium" },
+  ],
+};
+
+const productionMethodOptions = {
+  iron_steel: [
+    { value: "hot_rolled_flat_products", tr: "Sıcak haddelenmiş yassı ürünler", en: "Hot rolled flat products" },
+    { value: "steel_semi_finished_products", tr: "Yarı mamul çelik ürünler", en: "Semi-finished steel products" },
+    { value: "scrap_based_steel_products", tr: "Hurda bazlı çelik ürünler", en: "Scrap-based steel products" },
+  ],
+  aluminum: [
+    { value: "primary_aluminium", tr: "Birincil alüminyum üretimi", en: "Primary aluminium production" },
+    { value: "secondary_aluminium", tr: "İkincil alüminyum üretimi", en: "Secondary aluminium production" },
+    { value: "secondary_aluminium_ingots", tr: "İkincil alüminyum külçe üretimi", en: "Secondary aluminium ingot production" },
+  ],
+};
+
+const calculationMethodOptions = [
+  {
+    value: "default",
+    tr: "Varsayılan Değerler",
+    en: "Default values",
+    trHint: "Gerçek üretici verisi yoksa sistem AB varsayılan değerleriyle tahmini hesap yapar.",
+    enHint: "If actual producer data is not available, the system calculates using EU default values.",
+  },
+  {
+    value: "actual",
+    tr: "Gerçek Veri",
+    en: "Actual data",
+    trHint: "Üreticiden gelen gerçek emisyon verisi kullanılır; sonuç daha güvenilir olur.",
+    enHint: "Real emissions data from the producer is used; the result becomes more reliable.",
+  },
+  {
+    value: "mixed",
+    tr: "Karma",
+    en: "Mixed",
+    trHint: "Bazı alanlarda gerçek veri, bazı alanlarda varsayılan değer kullanılır.",
+    enHint: "Some fields use actual data while others still rely on default values.",
+  },
+];
+
+const actualDataOptions = [
+  {
+    value: "hayir",
+    tr: "Hayır, varsayılan değerlerle ilerle",
+    en: "No, continue with default values",
+    trHint: "Üreticiden doğrulanmış gerçek veri henüz gelmediyse bu seçenekle devam edilir.",
+    enHint: "Use this when verified actual data from the producer is not yet available.",
+  },
+  {
+    value: "evet",
+    tr: "Evet, doğrulanmış gerçek veri var",
+    en: "Yes, verified actual data is available",
+    trHint: "Üreticiden gelen gerçek veri mevcutsa sistem veri güvenini yükseltir.",
+    enHint: "If real producer data is available, the system can raise the confidence level.",
+  },
+];
+
+function GuidanceCard({ title, children }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="text-sm font-semibold text-slate-700">{title}</div>
+      <div className="mt-2 space-y-2 text-sm text-slate-600">{children}</div>
+    </div>
+  );
+}
+
+function Tooltip({ term, locale }) {
   return (
     <span className="group relative inline-flex items-center">
       <span className="ml-2 inline-flex h-5 w-5 cursor-help items-center justify-center rounded-full bg-slate-200 text-[11px] font-bold text-slate-700">
         i
       </span>
       <span className="pointer-events-none absolute left-0 top-7 z-10 hidden w-64 rounded-2xl bg-ink px-3 py-2 text-xs font-medium text-white shadow-xl group-hover:block">
-        {glossary[term]}
+        {glossary[term]?.[locale] || glossary[term]?.tr}
       </span>
     </span>
   );
 }
 
-function FormField({ label, children, hint, tooltip }) {
+function FormField({ label, children, hint, tooltip, locale = "tr" }) {
   return (
     <label className="block">
       <span className="label flex items-center">
         {label}
-        {tooltip ? <Tooltip term={tooltip} /> : null}
+        {tooltip ? <Tooltip term={tooltip} locale={locale} /> : null}
       </span>
       {children}
       {hint ? <span className="mt-2 block text-xs text-slate-500">{hint}</span> : null}
@@ -115,6 +203,32 @@ function ReportWizard({ onShipmentCreated, locale = "tr" }) {
     return () => window.clearTimeout(timeoutId);
   }, [form.cnCode]);
 
+  const detectedSectorKey = cnValidation?.detected_sector || (form.cnCode.startsWith("76") ? "aluminum" : "iron_steel");
+  const visibleRouteOptions = routeOptions[detectedSectorKey] || routeOptions.iron_steel;
+  const visibleProductionMethodOptions = productionMethodOptions[detectedSectorKey] || productionMethodOptions.iron_steel;
+
+  useEffect(() => {
+    setForm((current) => {
+      const nextRouteOptions = routeOptions[detectedSectorKey] || routeOptions.iron_steel;
+      const nextMethodOptions = productionMethodOptions[detectedSectorKey] || productionMethodOptions.iron_steel;
+      const currentRouteValid = nextRouteOptions.some((option) => option.value === current.productionRoute);
+      const currentMethodValid = nextMethodOptions.some((option) => option.value === current.productionMethod);
+
+      const nextRoute = currentRouteValid ? current.productionRoute : nextRouteOptions[0].value;
+      const nextMethod = currentMethodValid ? current.productionMethod : nextMethodOptions[0].value;
+
+      if (nextRoute === current.productionRoute && nextMethod === current.productionMethod) {
+        return current;
+      }
+
+      return {
+        ...current,
+        productionRoute: nextRoute,
+        productionMethod: nextMethod,
+      };
+    });
+  }, [detectedSectorKey]);
+
   const updateField = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
   };
@@ -137,6 +251,11 @@ function ReportWizard({ onShipmentCreated, locale = "tr" }) {
     return "2.670263";
   }, [form.cnCode]);
 
+  const selectedCalculationMethod = calculationMethodOptions.find((option) => option.value === form.calculationMethod) || calculationMethodOptions[0];
+  const selectedActualDataOption = actualDataOptions.find((option) => option.value === form.hasActualData) || actualDataOptions[0];
+  const selectedRouteOption = visibleRouteOptions.find((option) => option.value === form.productionRoute) || visibleRouteOptions[0];
+  const selectedProductionMethodOption =
+    visibleProductionMethodOptions.find((option) => option.value === form.productionMethod) || visibleProductionMethodOptions[0];
   const detectedSectorLabel = cnValidation?.detected_sector_label || t(locale, "Henüz doğrulanmadı", "Not validated yet");
   const confidencePreview =
     form.hasActualData === "evet"
@@ -164,7 +283,7 @@ function ReportWizard({ onShipmentCreated, locale = "tr" }) {
       supplementary_unit_quantity: Number(form.quantityTons),
     },
     goods: {
-      sector: cnValidation?.detected_sector || (form.cnCode.startsWith("76") ? "aluminum" : "iron_steel"),
+      sector: detectedSectorKey,
       material_type:
         cnValidation?.detected_material_type ||
         (form.cnCode === "76011000"
@@ -211,8 +330,8 @@ function ReportWizard({ onShipmentCreated, locale = "tr" }) {
       measurement_method_description: null,
       data_quality_notes:
         form.hasActualData === "evet"
-          ? t(locale, "Kullanıcı actual veri bulunduğunu belirtti; veri güveni iç inceleme sonrası yükseltilebilir.", "The user indicated that actual data exists; confidence can improve after internal review.")
-          : t(locale, "Actual veri sağlanmadı; sistem default value fallback ile hesaplayacak.", "No actual data was provided; the system will calculate with the default value fallback."),
+          ? t(locale, "Kullanıcı gerçek veri bulunduğunu belirtti; veri güveni iç inceleme sonrası yükseltilebilir.", "The user indicated that actual data exists; confidence can improve after internal review.")
+          : t(locale, "Gerçek veri sağlanmadı; sistem varsayılan değerlerle hesap yapacak.", "No actual data was provided; the system will calculate with default values."),
       default_value_share: form.hasActualData === "evet" ? 0 : 1,
       uses_actual_electricity_data: false,
       actual_electricity_evidence_reference: null,
@@ -320,6 +439,7 @@ function ReportWizard({ onShipmentCreated, locale = "tr" }) {
             <FormField
               label={t(locale, "CN Kodu (GTİP - İlk 8 Hane)", "CN Code (First 8 Digits of Tariff Code)")}
               hint={t(locale, "Bu kodu ihracat faturanızda veya gümrük beyannamenizde bulabilirsiniz.", "You can find this code on your export invoice or customs declaration.")}
+              locale={locale}
             >
               <input className="field" value={form.cnCode} onChange={updateField("cnCode")} />
             </FormField>
@@ -349,7 +469,7 @@ function ReportWizard({ onShipmentCreated, locale = "tr" }) {
               </div>
             </div>
 
-            <FormField label={t(locale, "Ürün Tanımı", "Goods Description")} hint={t(locale, "Kullanıcının anlayacağı kısa açıklama", "A short description your team will recognize")}>
+            <FormField label={t(locale, "Ürün Tanımı", "Goods Description")} hint={t(locale, "Kullanıcının anlayacağı kısa açıklama", "A short description your team will recognize")} locale={locale}>
               <input className="field" value={form.goodsDescription} onChange={updateField("goodsDescription")} />
             </FormField>
             <FormField label={t(locale, "Miktar (ton)", "Quantity (tons)")}>
@@ -383,34 +503,106 @@ function ReportWizard({ onShipmentCreated, locale = "tr" }) {
             <FormField label={t(locale, "Beyan Yılı", "Declaration Year")}>
               <input className="field" value={form.declarationYear} onChange={updateField("declarationYear")} />
             </FormField>
-            <FormField label={t(locale, "Üretim Rotası", "Production Route")} tooltip="bf_bof">
+            <FormField
+              label={t(locale, "Üretim Rotası", "Production Route")}
+              tooltip={detectedSectorKey === "aluminum" ? "secondary_aluminium" : "bf_bof"}
+              hint={t(
+                locale,
+                "Bu listede sadece seçilen sektör için geçerli üretim rotaları gösterilir.",
+                "This list only shows the production routes relevant to the detected sector.",
+              )}
+              locale={locale}
+            >
               <select className="field" value={form.productionRoute} onChange={updateField("productionRoute")}>
-                <option value="carbon_steel_bf_bof">{t(locale, "Karbon Çelik BF/BOF", "Carbon Steel BF/BOF")}</option>
-                <option value="carbon_steel_dri_eaf">{t(locale, "Karbon Çelik DRI/EAF", "Carbon Steel DRI/EAF")}</option>
-                <option value="scrap_eaf">{t(locale, "Hurda EAF", "Scrap EAF")}</option>
-                <option value="primary_aluminium">Primary Aluminium</option>
-                <option value="secondary_aluminium">Secondary Aluminium</option>
+                {visibleRouteOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {t(locale, option.tr, option.en)}
+                  </option>
+                ))}
               </select>
             </FormField>
-            <FormField label={t(locale, "Üretim Metodu", "Production Method")}>
-              <input className="field" value={form.productionMethod} onChange={updateField("productionMethod")} />
+            <FormField
+              label={t(locale, "Üretim Metodu", "Production Method")}
+              hint={t(
+                locale,
+                "Bu alan, ürünün tesiste hangi üretim tipiyle elde edildiğini kısa ve anlaşılır şekilde anlatır.",
+                "This field describes in a short and clear way how the product is produced at the facility.",
+              )}
+              locale={locale}
+            >
+              <select className="field" value={form.productionMethod} onChange={updateField("productionMethod")}>
+                {visibleProductionMethodOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {t(locale, option.tr, option.en)}
+                  </option>
+                ))}
+              </select>
             </FormField>
             <FormField label={t(locale, "Üretilen Miktar (ton)", "Produced Quantity (tons)")}>
               <input className="field" value={form.producedQuantityTons} onChange={updateField("producedQuantityTons")} />
             </FormField>
-            <FormField label={t(locale, "Hesaplama Yöntemi", "Calculation Method")} tooltip="monitoring_plan">
+            <FormField
+              label={t(locale, "Hesaplama Yöntemi", "Calculation Method")}
+              tooltip="monitoring_plan"
+              hint={t(locale, selectedCalculationMethod.trHint, selectedCalculationMethod.enHint)}
+              locale={locale}
+            >
               <select className="field" value={form.calculationMethod} onChange={updateField("calculationMethod")}>
-                <option value="default">Default</option>
-                <option value="actual">Actual</option>
-                <option value="mixed">Mixed</option>
+                {calculationMethodOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {t(locale, option.tr, option.en)}
+                  </option>
+                ))}
               </select>
             </FormField>
-            <FormField label={t(locale, "Doğrulanmış Actual Veri Var mı?", "Is verified actual data available?")} tooltip="secondary_aluminium">
+            <FormField
+              label={t(locale, "Doğrulanmış Gerçek Veri Var mı?", "Is verified actual data available?")}
+              tooltip="actual_data"
+              hint={t(locale, selectedActualDataOption.trHint, selectedActualDataOption.enHint)}
+              locale={locale}
+            >
               <select className="field" value={form.hasActualData} onChange={updateField("hasActualData")}>
-                <option value="hayir">{t(locale, "Hayır, default ile ilerle", "No, continue with defaults")}</option>
-                <option value="evet">{t(locale, "Evet, actual veri ile ilerleyeceğim", "Yes, I will continue with actual data")}</option>
+                {actualDataOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {t(locale, option.tr, option.en)}
+                  </option>
+                ))}
               </select>
             </FormField>
+            <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
+              <GuidanceCard title={t(locale, "Bu alanlar ne anlama geliyor?", "What do these fields mean?")}>
+                <p>
+                  {t(
+                    locale,
+                    "Varsayılan değerler, üreticiden gerçek emisyon verisi henüz gelmediyse sistemin AB'nin yayımladığı katsayılarla tahmini hesap yapmasıdır.",
+                    "Default values mean the system is estimating emissions with EU-published coefficients because actual producer data is not yet available.",
+                  )}
+                </p>
+                <p>
+                  {t(
+                    locale,
+                    "Gerçek veri seçildiğinde, üreticiden veya tesisten gelen emisyon verisi kullanılır ve hesap daha güvenilir hale gelir.",
+                    "When actual data is selected, emissions data from the producer or installation is used and the result becomes more reliable.",
+                  )}
+                </p>
+              </GuidanceCard>
+              <GuidanceCard title={t(locale, "Bu veriler şirkette kimde olur?", "Who usually owns this data inside the company?")}>
+                <p>
+                  {t(
+                    locale,
+                    "CN kodu, miktar ve sevkiyat bilgisi genelde ihracat veya gümrük ekibindedir. Üretim rotası ve yöntem bilgisi ise üretim veya tesis ekibinden gelir.",
+                    "CN code, quantity and shipment data usually sit with the export or customs team. Production route and method data usually comes from the plant or operations team.",
+                  )}
+                </p>
+                <p>
+                  {t(
+                    locale,
+                    "Gerçek emisyon ve doğrulama bilgisi çoğu şirkette çevre, sürdürülebilirlik, enerji veya danışman tarafında bulunur.",
+                    "Actual emissions and verification information is often held by sustainability, environment, energy or external advisory teams.",
+                  )}
+                </p>
+              </GuidanceCard>
+            </div>
           </div>
         ) : null}
 
@@ -423,8 +615,9 @@ function ReportWizard({ onShipmentCreated, locale = "tr" }) {
                 <div><span className="font-semibold">{t(locale, "CN Kodu", "CN Code")}:</span> {form.cnCode}</div>
                 <div><span className="font-semibold">{t(locale, "Algılanan sektör", "Detected sector")}:</span> {detectedSectorLabel}</div>
                 <div><span className="font-semibold">{t(locale, "Tesis", "Installation")}:</span> {form.installationName}</div>
-                <div><span className="font-semibold">{t(locale, "Metodoloji", "Methodology")}:</span> {form.calculationMethod}</div>
-                <div><span className="font-semibold">{t(locale, "Üretim rotası", "Production route")}:</span> {form.productionRoute}</div>
+                <div><span className="font-semibold">{t(locale, "Metodoloji", "Methodology")}:</span> {t(locale, selectedCalculationMethod.tr, selectedCalculationMethod.en)}</div>
+                <div><span className="font-semibold">{t(locale, "Üretim rotası", "Production route")}:</span> {t(locale, selectedRouteOption.tr, selectedRouteOption.en)}</div>
+                <div><span className="font-semibold">{t(locale, "Üretim metodu", "Production method")}:</span> {t(locale, selectedProductionMethodOption.tr, selectedProductionMethodOption.en)}</div>
                 <div><span className="font-semibold">{t(locale, "Miktar", "Quantity")}:</span> {form.quantityTons} {t(locale, "ton", "tons")}</div>
                 <div><span className="font-semibold">{t(locale, "Veri güveni", "Data confidence")}:</span> {submitResult?.calculation?.confidence_label || confidencePreview}</div>
               </div>
@@ -442,7 +635,7 @@ function ReportWizard({ onShipmentCreated, locale = "tr" }) {
                     )
                   : t(
                       locale,
-                      "Bu hesaplama tahmini verilere dayanıyor; actual veri ve doğrulama olmadan resmi beyan için uygun değildir.",
+                      "Bu hesaplama tahmini verilere dayanıyor; gerçek veri ve doğrulama olmadan resmi beyan için uygun değildir.",
                       "This calculation relies on estimated data; without actual data and verification it is not ready for formal declaration.",
                     )}
               </p>
@@ -461,7 +654,7 @@ function ReportWizard({ onShipmentCreated, locale = "tr" }) {
                   <div className="mt-1">{t(locale, "Durum", "Status")}: {submitResult.calculation.compliance_status_label}</div>
                   <div className="mt-1">{t(locale, "Veri Güveni", "Data Confidence")}: {submitResult.calculation.confidence_label}</div>
                   <div className="mt-1">
-                    {t(locale, "Veri Kalitesi", "Data Quality")}: {submitResult.calculation.data_quality_summary.actual_fields_count} actual / {submitResult.calculation.data_quality_summary.default_fields_count} default
+                    {t(locale, "Veri Kalitesi", "Data Quality")}: {submitResult.calculation.data_quality_summary.actual_fields_count} {t(locale, "gerçek", "actual")} / {submitResult.calculation.data_quality_summary.default_fields_count} {t(locale, "varsayılan", "default")}
                   </div>
                   <button
                     type="button"
