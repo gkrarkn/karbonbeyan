@@ -432,6 +432,31 @@ def _measure_wrapped_text_height(
     return max(lines, 1) * line_gap
 
 
+def _count_wrapped_lines(
+    text: str,
+    max_width: float,
+    font_name: str = FONT_REGULAR,
+    font_size: float = 8,
+) -> int:
+    words = text.split()
+    lines = 0
+    current_line = ""
+
+    for word in words:
+        candidate = word if not current_line else f"{current_line} {word}"
+        if stringWidth(candidate, font_name, font_size) <= max_width:
+            current_line = candidate
+        else:
+            if current_line:
+                lines += 1
+            current_line = word
+
+    if current_line:
+        lines += 1
+
+    return max(lines, 1)
+
+
 def _draw_status_pill(
     pdf: canvas.Canvas,
     x: float,
@@ -459,23 +484,38 @@ def _draw_quality_row(
     body: str,
     fill_color,
     text_color,
-    height: float = 11.5 * mm,
+    min_height: float = 11.5 * mm,
 ) -> float:
+    text_width = width - 5.6 * mm
+    title_line_gap = 2.7 * mm
+    body_line_gap = 2.5 * mm
+    title_lines = _count_wrapped_lines(title, text_width, font_name=FONT_BOLD, font_size=7.2)
+    body_lines = _count_wrapped_lines(body, text_width, font_name=FONT_REGULAR, font_size=6.4)
+    height = max(min_height, 3.5 * mm + title_lines * title_line_gap + 1.2 * mm + body_lines * body_line_gap + 2.2 * mm)
+
     pdf.setFillColor(fill_color)
     pdf.setStrokeColor(fill_color)
     pdf.roundRect(x, y - height, width, height, 2.3 * mm, stroke=0, fill=1)
     pdf.setFillColor(text_color)
-    pdf.setFont(FONT_BOLD, 8.0)
-    pdf.drawString(x + 2.8 * mm, y - 3.8 * mm, title)
+    _draw_wrapped_text(
+        pdf,
+        title,
+        x + 2.8 * mm,
+        y - 3.6 * mm,
+        text_width,
+        font_name=FONT_BOLD,
+        font_size=7.2,
+        line_gap=title_line_gap,
+    )
     _draw_wrapped_text(
         pdf,
         body,
         x + 2.8 * mm,
-        y - 6.8 * mm,
-        width - 5.6 * mm,
+        y - 4.1 * mm - title_lines * title_line_gap,
+        text_width,
         font_name=FONT_REGULAR,
-        font_size=6.6,
-        line_gap=2.5 * mm,
+        font_size=6.4,
+        line_gap=body_line_gap,
     )
     return y - height - 1.4 * mm
 
@@ -487,7 +527,7 @@ def _draw_action_quality_panel(
     y: float,
     width: float,
 ) -> float:
-    panel_height = 43 * mm
+    panel_height = 58 * mm
     _draw_box(pdf, x, y, width, panel_height, _pdf_text(record, "Karar ve Risk Özeti", "Decision and Risk Summary"))
 
     confidence_level = record.calculation.confidence_level.value
