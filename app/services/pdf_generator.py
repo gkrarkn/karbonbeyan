@@ -627,10 +627,11 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
     margin = 15 * mm
     y = _draw_page_header(pdf, record, width, height, margin)
 
+    top_row_y = y
     y = _draw_key_value_block(
         pdf,
         margin,
-        y,
+        top_row_y,
         _pdf_text(record, "Yetkili CBAM Beyan Sahibi", "Authorised CBAM Declarant"),
         [
             f"Name: {record.payload.declarant.declarant_name}",
@@ -643,7 +644,7 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
     _draw_key_value_block(
         pdf,
         margin + (width - 2 * margin) / 2 + 3 * mm,
-        y + 46 * mm,
+        top_row_y,
         _pdf_text(record, "İthalat Detayları", "Import Details"),
         [
             f"Reference: {record.payload.import_details.shipment_reference}",
