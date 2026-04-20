@@ -4,9 +4,20 @@ const APP_NAME = import.meta.env.VITE_APP_NAME || "KarbonBeyan";
 async function parseError(response) {
   try {
     const body = await response.json();
-    return body.detail || "İstek başarısız oldu.";
+    if (typeof body === "string" && body.trim()) {
+      return body;
+    }
+    if (body?.detail) {
+      return typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail);
+    }
+    return JSON.stringify(body);
   } catch {
-    return "İstek başarısız oldu.";
+    try {
+      const text = await response.text();
+      return text?.trim() || "İstek başarısız oldu.";
+    } catch {
+      return "İstek başarısız oldu.";
+    }
   }
 }
 
