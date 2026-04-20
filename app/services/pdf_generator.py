@@ -20,26 +20,32 @@ FONT_BOLD = "Arial-Bold"
 FONT_ITALIC = "Arial-Italic"
 FONT_BOLD_ITALIC = "Arial-BoldItalic"
 
+FONT_ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets" / "fonts"
+
 FONT_CANDIDATES = {
     FONT_REGULAR: [
+        str(FONT_ASSETS_DIR / "Arial.ttf"),
         "/System/Library/Fonts/Supplemental/Arial.ttf",
         "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf",
         "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     ],
     FONT_BOLD: [
+        str(FONT_ASSETS_DIR / "Arial-Bold.ttf"),
         "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
         "/usr/share/fonts/truetype/msttcorefonts/Arial_Bold.ttf",
         "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
     ],
     FONT_ITALIC: [
+        str(FONT_ASSETS_DIR / "Arial-Italic.ttf"),
         "/System/Library/Fonts/Supplemental/Arial Italic.ttf",
         "/usr/share/fonts/truetype/msttcorefonts/Arial_Italic.ttf",
         "/usr/share/fonts/truetype/liberation2/LiberationSans-Italic.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf",
     ],
     FONT_BOLD_ITALIC: [
+        str(FONT_ASSETS_DIR / "Arial-BoldItalic.ttf"),
         "/System/Library/Fonts/Supplemental/Arial Bold Italic.ttf",
         "/usr/share/fonts/truetype/msttcorefonts/Arial_Bold_Italic.ttf",
         "/usr/share/fonts/truetype/liberation2/LiberationSans-BoldItalic.ttf",
