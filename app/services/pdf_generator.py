@@ -459,7 +459,7 @@ def _draw_quality_row(
     body: str,
     fill_color,
     text_color,
-    height: float = 8.8 * mm,
+    height: float = 11.5 * mm,
 ) -> float:
     pdf.setFillColor(fill_color)
     pdf.setStrokeColor(fill_color)
@@ -467,8 +467,16 @@ def _draw_quality_row(
     pdf.setFillColor(text_color)
     pdf.setFont(FONT_BOLD, 8.0)
     pdf.drawString(x + 2.8 * mm, y - 3.8 * mm, title)
-    pdf.setFont(FONT_REGULAR, 7.1)
-    pdf.drawString(x + 2.8 * mm, y - 6.7 * mm, body[:104])
+    _draw_wrapped_text(
+        pdf,
+        body,
+        x + 2.8 * mm,
+        y - 6.8 * mm,
+        width - 5.6 * mm,
+        font_name=FONT_REGULAR,
+        font_size=6.6,
+        line_gap=2.5 * mm,
+    )
     return y - height - 1.4 * mm
 
 
@@ -479,7 +487,7 @@ def _draw_action_quality_panel(
     y: float,
     width: float,
 ) -> float:
-    panel_height = 34 * mm
+    panel_height = 43 * mm
     _draw_box(pdf, x, y, width, panel_height, _pdf_text(record, "Karar ve Risk Özeti", "Decision and Risk Summary"))
 
     confidence_level = record.calculation.confidence_level.value
@@ -736,11 +744,13 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
     )
     bottom_content_height = (
         max(verification_height, signature_h)
+        + 4 * mm
+        + signature_note_height
         + 2 * mm
         + disclaimer_height
-        + 4.5 * mm
+        + 8 * mm
     )
-    if y - bottom_content_height < margin:
+    if y - bottom_content_height < margin + 4 * mm:
         pdf.showPage()
         y = _draw_page_header(
             pdf,
