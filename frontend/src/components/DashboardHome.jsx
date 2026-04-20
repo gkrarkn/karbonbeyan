@@ -1,7 +1,9 @@
+import { t, translateComplianceStatus, translateConfidence, translateRole } from "../lib/i18n";
 import { highestRiskRecords, pendingVerifications, upcomingDeclarations } from "../data/mockData";
 import EmissionsChart from "./charts/EmissionsChart";
 
-function DashboardHome({ trendData, shipments, loading, error, workspaceAccess }) {
+function DashboardHome({ trendData, shipments, loading, error, workspaceAccess, locale }) {
+  const hasLiveShipments = shipments.length > 0;
   const pendingShipments = shipments.filter(
     (shipment) => shipment.payload.verification.verification_status === "pending",
   );
@@ -33,11 +35,11 @@ function DashboardHome({ trendData, shipments, loading, error, workspaceAccess }
   const avgConfidence =
     shipments.length > 0
       ? shipments.filter((shipment) => shipment.calculation.confidence_level === "high").length > shipments.length / 2
-        ? "Yüksek"
+        ? t(locale, "Yüksek", "High")
         : shipments.filter((shipment) => shipment.calculation.confidence_level === "low").length > shipments.length / 2
-          ? "Düşük"
-          : "Orta"
-      : "Orta";
+          ? t(locale, "Düşük", "Low")
+          : t(locale, "Orta", "Medium")
+      : t(locale, "Orta", "Medium");
 
   return (
     <div className="space-y-6">
@@ -45,29 +47,32 @@ function DashboardHome({ trendData, shipments, loading, error, workspaceAccess }
         <div className="grid gap-6 bg-[linear-gradient(135deg,#0E4FAF_0%,#0B3F91_55%,#0B2447_100%)] p-6 text-white xl:grid-cols-[1.2fr_0.8fr]">
           <div>
             <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/65">KarbonBeyan Vision</div>
-            <h2 className="mt-3 text-3xl font-extrabold">CBAM Uyum Sürecinizi Yönetin ve Riskinizi Görün</h2>
+            <h2 className="mt-3 text-3xl font-extrabold">{t(locale, "CBAM Uyum Sürecinizi Yönetin ve Riskinizi Görün", "Manage Your CBAM Process and See Your Risk")}</h2>
             <p className="mt-3 max-w-2xl text-sm text-white/75">
-              Hesap üretmekten öte; uygunluk statüsü, veri güveni, doğrulama kuyruğu ve tedarikçi akışını tek kontrol merkezinden yönetin.
+              {t(locale, "Hesap üretmekten öte; uygunluk statüsü, veri güveni, doğrulama kuyruğu ve tedarikçi akışını tek kontrol merkezinden yönetin.", "Go beyond calculations and manage compliance status, confidence, verification queues and supplier flows from one control center.")}
             </p>
+            {!hasLiveShipments && !loading ? (
+              <div className="mt-4 inline-flex rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white/85">
+                İlk canlı kayıt geldiğinde dashboard metrikleri otomatik dolacaktır.
+              </div>
+            ) : null}
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
             <div className="rounded-3xl bg-white/10 p-4 backdrop-blur">
-              <div className="text-xs uppercase tracking-[0.24em] text-white/60">Trial Durumu</div>
+              <div className="text-xs uppercase tracking-[0.24em] text-white/60">{t(locale, "Trial Durumu", "Trial Status")}</div>
               <div className="mt-2 text-xl font-extrabold">
-                {workspaceAccess?.trial_status === "active"
-                  ? `${workspaceAccess.trial_days_remaining} gün full erişim`
-                  : "Plan bazlı erişim aktif"}
+                {workspaceAccess?.trial_status === "active" ? t(locale, `${workspaceAccess.trial_days_remaining} gün full erişim`, `${workspaceAccess.trial_days_remaining} days full access`) : t(locale, "Plan bazlı erişim aktif", "Plan-based access active")}
               </div>
               <div className="mt-2 text-sm text-white/75">
-                Supplier Data Collection dahil tüm Pro modüller şu an açık.
+                {t(locale, "Supplier Data Collection dahil tüm Pro modüller şu an açık.", "All Pro modules, including Supplier Data Collection, are currently enabled.")}
               </div>
             </div>
             <div className="rounded-3xl bg-white/10 p-4 backdrop-blur">
-              <div className="text-xs uppercase tracking-[0.24em] text-white/60">Yetki ve Plan</div>
-              <div className="mt-2 text-xl font-extrabold">{workspaceAccess?.role_label || "Firma Yöneticisi"}</div>
+              <div className="text-xs uppercase tracking-[0.24em] text-white/60">{t(locale, "Yetki ve Plan", "Access and Plan")}</div>
+              <div className="mt-2 text-xl font-extrabold">{translateRole(locale, workspaceAccess?.role_label || t(locale, "Firma Yöneticisi", "Company Admin"))}</div>
               <div className="mt-2 text-sm text-white/75">
-                Aktif seviye: {(workspaceAccess?.active_plan || "growth").toUpperCase()}
+                {t(locale, "Aktif seviye", "Current level")}: {(workspaceAccess?.active_plan || "growth").toUpperCase()}
               </div>
             </div>
           </div>
@@ -108,12 +113,12 @@ function DashboardHome({ trendData, shipments, loading, error, workspaceAccess }
 
       <section className="grid gap-4 xl:grid-cols-3">
         {[
-          { title: "Toplam Gömülü Emisyon", value: `${totalEmissions} tCO2e`, meta: "Canlı kayıtlar", tone: "bg-pine" },
-          { title: "Ortalama Veri Güveni", value: avgConfidence, meta: "Shipment kayıtlarından hesaplandı", tone: "bg-clay" },
+          { title: t(locale, "Toplam Gömülü Emisyon", "Total Embedded Emissions"), value: `${totalEmissions} tCO2e`, meta: t(locale, "Canlı kayıtlar", "Live records"), tone: "bg-pine" },
+          { title: t(locale, "Ortalama Veri Güveni", "Average Data Confidence"), value: avgConfidence, meta: t(locale, "Shipment kayıtlarından hesaplandı", "Calculated from shipment records"), tone: "bg-clay" },
           {
-            title: "Verification Bekleyen",
+            title: t(locale, "Verification Bekleyen", "Pending Verification"),
             value: pendingShipments.length,
-            meta: "Resmi beyana engel kayıt",
+            meta: t(locale, "Resmi beyana engel kayıt", "Blocking official declaration"),
             tone: "bg-moss",
           },
         ].map((card) => (
@@ -135,7 +140,7 @@ function DashboardHome({ trendData, shipments, loading, error, workspaceAccess }
           <div className="text-sm font-semibold text-slate-500">En Riskli 5 Kayıt</div>
           <h3 className="mt-1 text-xl font-bold text-ink">Öncelikli müdahale listesi</h3>
           <div className="mt-5 space-y-4">
-            {(shipments.length > 0
+            {(hasLiveShipments
               ? riskyShipments.slice(0, 5).map((shipment) => ({
                   ref: shipment.payload.import_details.shipment_reference,
                   company: shipment.payload.facility.installation_name,
@@ -148,7 +153,7 @@ function DashboardHome({ trendData, shipments, loading, error, workspaceAccess }
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-sm font-semibold text-ink">{row.company}</div>
                   <div className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
-                    {row.confidence}
+                    {translateConfidence(locale, row.confidence)}
                   </div>
                 </div>
                 <div className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
@@ -166,7 +171,7 @@ function DashboardHome({ trendData, shipments, loading, error, workspaceAccess }
           <div className="text-sm font-semibold text-slate-500">Beyan Dönemi Yaklaşanlar</div>
           <h3 className="mt-1 text-xl font-bold text-ink">Takvim baskısı olan kayıtlar</h3>
           <div className="mt-5 space-y-4">
-            {(shipments.length > 0
+            {(hasLiveShipments
               ? shipments.slice(0, 3).map((shipment) => ({
                   company: shipment.payload.facility.installation_name,
                   period: `${shipment.payload.reporting.declaration_year}`,
@@ -202,7 +207,7 @@ function DashboardHome({ trendData, shipments, loading, error, workspaceAccess }
               <div key={`${row.company}-${row.status}`} className="rounded-2xl bg-slate-50 p-4">
                 <div className="text-sm font-semibold text-ink">{row.company}</div>
                 <div className="mt-2 text-sm text-slate-600">Verifier: {row.verifier}</div>
-                <div className="mt-1 text-sm font-semibold text-slate-700">{row.status}</div>
+                <div className="mt-1 text-sm font-semibold text-slate-700">{translateComplianceStatus(locale, row.status)}</div>
               </div>
             ))}
           </div>
@@ -216,14 +221,14 @@ function DashboardHome({ trendData, shipments, loading, error, workspaceAccess }
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-slate-700">Actual alanlar</span>
                 <span className="text-sm font-bold text-pine">
-                  %{shipments.length > 0 ? Math.round((shipments.reduce((sum, shipment) => sum + shipment.calculation.data_quality_summary.actual_share, 0) / shipments.length) * 100) : 63}
+                  %{hasLiveShipments ? Math.round((shipments.reduce((sum, shipment) => sum + shipment.calculation.data_quality_summary.actual_share, 0) / shipments.length) * 100) : 0}
                 </span>
               </div>
               <div className="mt-3 h-3 rounded-full bg-white">
                 <div
                   className="h-3 rounded-full bg-pine"
                   style={{
-                    width: `${shipments.length > 0 ? Math.round((shipments.reduce((sum, shipment) => sum + shipment.calculation.data_quality_summary.actual_share, 0) / shipments.length) * 100) : 63}%`,
+                    width: `${hasLiveShipments ? Math.round((shipments.reduce((sum, shipment) => sum + shipment.calculation.data_quality_summary.actual_share, 0) / shipments.length) * 100) : 0}%`,
                   }}
                 />
               </div>
@@ -232,14 +237,14 @@ function DashboardHome({ trendData, shipments, loading, error, workspaceAccess }
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-slate-700">Default alanlar</span>
                 <span className="text-sm font-bold text-clay">
-                  %{shipments.length > 0 ? Math.round((shipments.reduce((sum, shipment) => sum + shipment.calculation.data_quality_summary.default_share, 0) / shipments.length) * 100) : 37}
+                  %{hasLiveShipments ? Math.round((shipments.reduce((sum, shipment) => sum + shipment.calculation.data_quality_summary.default_share, 0) / shipments.length) * 100) : 0}
                 </span>
               </div>
               <div className="mt-3 h-3 rounded-full bg-white">
                 <div
                   className="h-3 rounded-full bg-clay"
                   style={{
-                    width: `${shipments.length > 0 ? Math.round((shipments.reduce((sum, shipment) => sum + shipment.calculation.data_quality_summary.default_share, 0) / shipments.length) * 100) : 37}%`,
+                    width: `${hasLiveShipments ? Math.round((shipments.reduce((sum, shipment) => sum + shipment.calculation.data_quality_summary.default_share, 0) / shipments.length) * 100) : 0}%`,
                   }}
                 />
               </div>
@@ -251,8 +256,8 @@ function DashboardHome({ trendData, shipments, loading, error, workspaceAccess }
       <section className="panel p-6">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-sm font-semibold text-slate-500">Son Kayıtlar</div>
-            <h3 className="mt-1 text-xl font-bold text-ink">Arşivden son raporlar</h3>
+            <div className="text-sm font-semibold text-slate-500">{t(locale, "Son Kayıtlar", "Latest Records")}</div>
+            <h3 className="mt-1 text-xl font-bold text-ink">{t(locale, "Arşivden son raporlar", "Recent reports from the archive")}</h3>
           </div>
           <button type="button" className="btn-secondary">
             Tümünü Gör
@@ -279,7 +284,7 @@ function DashboardHome({ trendData, shipments, loading, error, workspaceAccess }
                     <td className="py-4 font-semibold">{shipment.payload.import_details.shipment_reference}</td>
                     <td className="py-4">{shipment.payload.facility.installation_name}</td>
                     <td className="py-4">{shipment.calculation.calculation_method_applied}</td>
-                    <td className="py-4">{shipment.calculation.compliance_status_label}</td>
+                    <td className="py-4">{translateComplianceStatus(locale, shipment.calculation.compliance_status_label)}</td>
                     <td className="py-4">{shipment.calculation.total_embedded_emissions_tco2} tCO2e</td>
                   </tr>
                 ))}

@@ -76,44 +76,44 @@ export const coefficientRows = [
 export const highestRiskRecords = [
   {
     ref: "KB-2026-0041",
-    company: "Delta Metal",
-    reason: "Tamamen default değer kullanıldı",
+    company: "Öncelikli kayıt",
+    reason: "Actual veri ve doğrulama bilgisi henüz tamamlanmadı",
     confidence: "Düşük Güven",
   },
   {
     ref: "KB-2026-0038",
-    company: "Marmara Çelik",
-    reason: "Verification raporu bekleniyor",
+    company: "İç inceleme kaydı",
+    reason: "Doğrulama raporu ve supporting document bekleniyor",
     confidence: "Orta Güven",
   },
   {
     ref: "KB-2026-0033",
-    company: "Ege Alüminyum",
+    company: "İzleme planı kaydı",
     reason: "Monitoring plan referansı eksik",
     confidence: "Düşük Güven",
   },
   {
     ref: "KB-2026-0029",
-    company: "Kuzey Hadde",
+    company: "CN kontrol kaydı",
     reason: "CN doğrulama sonrası rota yeniden kontrol edilmeli",
     confidence: "Orta Güven",
   },
   {
     ref: "KB-2026-0022",
-    company: "Trakya Metal",
+    company: "Tedarikçi veri kaydı",
     reason: "Precursor verisi gecikmeli",
     confidence: "Orta Güven",
   },
 ];
 
 export const upcomingDeclarations = [
-  { company: "Marmara Çelik", period: "2026 Q2", due: "8 gün kaldı" },
-  { company: "Anadolu Alüminyum", period: "2026 Q2", due: "11 gün kaldı" },
-  { company: "Delta Metal", period: "2026 Q2", due: "13 gün kaldı" },
+  { company: "Çeyrek dönem beyanı", period: "2026 Q2", due: "8 gün kaldı" },
+  { company: "İç onay bekleyen dönem", period: "2026 Q2", due: "11 gün kaldı" },
+  { company: "Takvimlenmesi gereken kayıt", period: "2026 Q2", due: "13 gün kaldı" },
 ];
 
 export const pendingVerifications = [
-  { company: "Marmara Çelik", verifier: "Atanmadı", status: "Bekliyor" },
-  { company: "Anadolu Alüminyum", verifier: "Green Audit GmbH", status: "Doküman bekleniyor" },
-  { company: "Ege Alüminyum", verifier: "Atanmadı", status: "Bekliyor" },
+  { company: "Doğrulayıcı ataması bekleyen kayıt", verifier: "Atanmadı", status: "Bekliyor" },
+  { company: "Doküman tamamlanacak kayıt", verifier: "Harici doğrulayıcı", status: "Doküman bekleniyor" },
+  { company: "İç ekip inceleme kaydı", verifier: "Atanmadı", status: "Bekliyor" },
 ];

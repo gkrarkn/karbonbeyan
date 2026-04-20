@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { createShipment, downloadShipmentPdf, validateCnCode } from "../../lib/api";
+import { t } from "../../lib/i18n";
 import StepIndicator from "./StepIndicator";
 
-const steps = [
-  { id: "urun", title: "Ürün ve Sevkiyat", description: "CN kodu, menşe, miktar" },
-  { id: "tesis", title: "Tesis Bilgileri", description: "Kuruluş ve operatör detayları" },
-  { id: "uretim", title: "Üretim ve Yöntem", description: "Rota, period, actual/default" },
-  { id: "dogrula", title: "Kontrol ve Gönder", description: "Özet, PDF ve hesaplama" },
-];
+function getSteps(locale) {
+  return [
+    { id: "urun", title: t(locale, "Ürün ve Sevkiyat", "Product and Shipment"), description: t(locale, "CN kodu, menşe, miktar", "CN code, origin, quantity") },
+    { id: "tesis", title: t(locale, "Tesis Bilgileri", "Facility Details"), description: t(locale, "Kuruluş ve operatör detayları", "Installation and operator details") },
+    { id: "uretim", title: t(locale, "Üretim ve Yöntem", "Production and Method"), description: t(locale, "Rota, period, actual/default", "Route, period, actual/default") },
+    { id: "dogrula", title: t(locale, "Kontrol ve Gönder", "Review and Submit"), description: t(locale, "Özet, PDF ve hesaplama", "Summary, PDF and calculation") },
+  ];
+}
 
 const initialForm = {
   shipmentReference: "TR-2026-0001",
@@ -28,11 +31,11 @@ const initialForm = {
   calculationMethod: "default",
   producedQuantityTons: "1250",
   hasActualData: "hayir",
-  declarantName: "KarbonBeyan Demo Kullanıcısı",
+  declarantName: "Firma Yetkilisi",
   declarantEori: "DE123456789000",
   cbamAccountNumber: "CBAM-DE-2026-000045",
   memberState: "DE",
-  importerName: "KarbonBeyan Demo Kullanıcısı",
+  importerName: "İthalatçı Firma",
   importerEori: "DE123456789000",
 };
 
@@ -68,7 +71,8 @@ function FormField({ label, children, hint, tooltip }) {
   );
 }
 
-function ReportWizard({ onShipmentCreated }) {
+function ReportWizard({ onShipmentCreated, locale = "tr" }) {
+  const steps = getSteps(locale);
   const [currentStep, setCurrentStep] = useState(0);
   const [form, setForm] = useState(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -133,9 +137,11 @@ function ReportWizard({ onShipmentCreated }) {
     return "2.670263";
   }, [form.cnCode]);
 
-  const detectedSectorLabel = cnValidation?.detected_sector_label || "Henüz doğrulanmadı";
+  const detectedSectorLabel = cnValidation?.detected_sector_label || t(locale, "Henüz doğrulanmadı", "Not validated yet");
   const confidencePreview =
-    form.hasActualData === "evet" ? "Orta/Yüksek Güven" : "Düşük Güven (Default ağırlıklı)";
+    form.hasActualData === "evet"
+      ? t(locale, "Orta/Yüksek Güven", "Medium/High Confidence")
+      : t(locale, "Düşük Güven (Default ağırlıklı)", "Low Confidence (default-weighted)");
 
   const buildPayload = () => ({
     declarant: {
@@ -205,8 +211,8 @@ function ReportWizard({ onShipmentCreated }) {
       measurement_method_description: null,
       data_quality_notes:
         form.hasActualData === "evet"
-          ? "Kullanıcı actual veri bulunduğunu belirtti; veri güveni iç inceleme sonrası yükseltilebilir."
-          : "Actual veri sağlanmadı; sistem default value fallback ile hesaplayacak.",
+          ? t(locale, "Kullanıcı actual veri bulunduğunu belirtti; veri güveni iç inceleme sonrası yükseltilebilir.", "The user indicated that actual data exists; confidence can improve after internal review.")
+          : t(locale, "Actual veri sağlanmadı; sistem default value fallback ile hesaplayacak.", "No actual data was provided; the system will calculate with the default value fallback."),
       default_value_share: form.hasActualData === "evet" ? 0 : 1,
       uses_actual_electricity_data: false,
       actual_electricity_evidence_reference: null,
@@ -236,7 +242,7 @@ function ReportWizard({ onShipmentCreated }) {
       company_name_for_pdf: form.importerName,
       logo_path: null,
       signatory_name: form.declarantName,
-      signatory_title: "Yetkili CBAM Beyan Sahibi",
+      signatory_title: t(locale, "Yetkili CBAM Beyan Sahibi", "Authorized CBAM Declarant"),
       show_stamp_box: true,
     },
   });
@@ -244,7 +250,7 @@ function ReportWizard({ onShipmentCreated }) {
   const handleSubmit = async () => {
     setSubmitError("");
     if (cnValidation && !cnValidation.is_cbam_covered) {
-      setSubmitError("Bu kod şu anki CBAM düzenlemesi kapsamında değildir.");
+      setSubmitError(t(locale, "Bu kod şu anki CBAM düzenlemesi kapsamında değildir.", "This code is currently outside the CBAM scope."));
       return;
     }
     setIsSubmitting(true);
@@ -281,14 +287,20 @@ function ReportWizard({ onShipmentCreated }) {
       <div className="panel p-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <div className="text-sm font-semibold text-slate-500">Uyum Akışı</div>
-            <h2 className="mt-1 text-2xl font-extrabold text-ink">CBAM uyum sürecinizi yönetin ve riskinizi görün</h2>
+            <div className="text-sm font-semibold text-slate-500">{t(locale, "Uyum Akışı", "Workflow")}</div>
+            <h2 className="mt-1 text-2xl font-extrabold text-ink">
+              {t(locale, "CBAM uyum sürecinizi yönetin ve riskinizi görün", "Manage your CBAM process and see your risk")}
+            </h2>
             <p className="mt-2 max-w-2xl text-sm text-slate-600">
-              İlk aşamada minimum alanları girin; sistem CN kodunu tanır, veri güvenini gösterir, uygunluk statüsünü belirler ve resmi beyan öncesi süreci görünür kılar.
+              {t(
+                locale,
+                "İlk aşamada minimum alanları girin; sistem CN kodunu tanır, veri güvenini gösterir, uygunluk statüsünü belirler ve resmi beyan öncesi süreci görünür kılar.",
+                "Start with the minimum required fields; the system identifies the CN code, shows data confidence, assigns a compliance status and makes the pre-declaration process visible.",
+              )}
             </p>
           </div>
           <div className="rounded-2xl bg-mist px-4 py-3 text-sm font-semibold text-slate-600">
-            Adım {currentStep + 1} / {steps.length}
+            {t(locale, "Adım", "Step")} {currentStep + 1} / {steps.length}
           </div>
         </div>
       </div>
@@ -298,45 +310,48 @@ function ReportWizard({ onShipmentCreated }) {
       <div className="panel p-6">
         {currentStep === 0 ? (
           <div className="grid gap-5 md:grid-cols-2">
-            <FormField label="Sevkiyat Referansı">
+            <FormField label={t(locale, "Sevkiyat Referansı", "Shipment Reference")}>
               <input className="field" value={form.shipmentReference} onChange={updateField("shipmentReference")} />
             </FormField>
-            <FormField label="İthalat Tarihi">
+            <FormField label={t(locale, "İthalat Tarihi", "Import Date")}>
               <input type="date" className="field" value={form.importDate} onChange={updateField("importDate")} />
             </FormField>
             <FormField
-              label="CN Kodu (GTİP - İlk 8 Hane)"
-              hint="Bu kodu ihracat faturanızda veya gümrük beyannamenizde bulabilirsiniz."
+              label={t(locale, "CN Kodu (GTİP - İlk 8 Hane)", "CN Code (First 8 Digits of Tariff Code)")}
+              hint={t(locale, "Bu kodu ihracat faturanızda veya gümrük beyannamenizde bulabilirsiniz.", "You can find this code on your export invoice or customs declaration.")}
             >
               <input className="field" value={form.cnCode} onChange={updateField("cnCode")} />
             </FormField>
-            <FormField label="Menşe Ülke">
+            <FormField label={t(locale, "Menşe Ülke", "Country of Origin")}>
               <select className="field" value={form.countryOfOrigin} onChange={updateField("countryOfOrigin")}>
-                <option value="TR">Türkiye</option>
-                <option value="EG">Mısır</option>
-                <option value="UA">Ukrayna</option>
+                <option value="TR">{t(locale, "Türkiye", "Turkey")}</option>
+                <option value="EG">{t(locale, "Mısır", "Egypt")}</option>
+                <option value="UA">{t(locale, "Ukrayna", "Ukraine")}</option>
               </select>
             </FormField>
 
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
-              <div className="text-sm font-semibold text-slate-700">Akıllı Doğrulama</div>
+              <div className="text-sm font-semibold text-slate-700">{t(locale, "Akıllı Doğrulama", "Smart Validation")}</div>
               <div className="mt-2 text-sm text-slate-600">
-                {isValidatingCn ? "CN kodu doğrulanıyor..." : cnValidation?.message || "8 haneli CN kodu girildiğinde sektör otomatik algılanır."}
+                {isValidatingCn
+                  ? t(locale, "CN kodu doğrulanıyor...", "Validating CN code...")
+                  : cnValidation?.message ||
+                    t(locale, "8 haneli CN kodu girildiğinde sektör otomatik algılanır.", "The sector is detected automatically when an 8-digit CN code is entered.")}
               </div>
               <div className="mt-3 flex flex-wrap gap-3">
                 <div className="rounded-full bg-white px-3 py-2 text-xs font-semibold text-slate-700">
-                  Algılanan sektör: {detectedSectorLabel}
+                  {t(locale, "Algılanan sektör", "Detected sector")}: {detectedSectorLabel}
                 </div>
                 <div className="rounded-full bg-white px-3 py-2 text-xs font-semibold text-slate-700">
-                  Kapsam: {cnValidation?.is_cbam_covered ? "CBAM kapsamı içinde" : "Kontrol bekleniyor"}
+                  {t(locale, "Kapsam", "Coverage")}: {cnValidation?.is_cbam_covered ? t(locale, "CBAM kapsamı içinde", "Within CBAM scope") : t(locale, "Kontrol bekleniyor", "Awaiting validation")}
                 </div>
               </div>
             </div>
 
-            <FormField label="Ürün Tanımı" hint="Kullanıcının anlayacağı kısa açıklama">
+            <FormField label={t(locale, "Ürün Tanımı", "Goods Description")} hint={t(locale, "Kullanıcının anlayacağı kısa açıklama", "A short description your team will recognize")}>
               <input className="field" value={form.goodsDescription} onChange={updateField("goodsDescription")} />
             </FormField>
-            <FormField label="Miktar (ton)">
+            <FormField label={t(locale, "Miktar (ton)", "Quantity (tons)")}>
               <input className="field" value={form.quantityTons} onChange={updateField("quantityTons")} />
             </FormField>
           </div>
@@ -344,19 +359,19 @@ function ReportWizard({ onShipmentCreated }) {
 
         {currentStep === 1 ? (
           <div className="grid gap-5 md:grid-cols-2">
-            <FormField label="Tesis Adı">
+            <FormField label={t(locale, "Tesis Adı", "Installation Name")}>
               <input className="field" value={form.installationName} onChange={updateField("installationName")} />
             </FormField>
-            <FormField label="Tesis Kodu">
+            <FormField label={t(locale, "Tesis Kodu", "Installation ID")}>
               <input className="field" value={form.installationId} onChange={updateField("installationId")} />
             </FormField>
-            <FormField label="Şehir">
+            <FormField label={t(locale, "Şehir", "City")}>
               <input className="field" value={form.city} onChange={updateField("city")} />
             </FormField>
-            <FormField label="Operatör / Firma Adı">
+            <FormField label={t(locale, "Operatör / Firma Adı", "Operator / Company Name")}>
               <input className="field" value={form.operatorName} onChange={updateField("operatorName")} />
             </FormField>
-            <FormField label="Operatör E-posta">
+            <FormField label={t(locale, "Operatör E-posta", "Operator Email")}>
               <input className="field" value={form.operatorEmail} onChange={updateField("operatorEmail")} />
             </FormField>
           </div>
@@ -364,35 +379,35 @@ function ReportWizard({ onShipmentCreated }) {
 
         {currentStep === 2 ? (
           <div className="grid gap-5 md:grid-cols-2">
-            <FormField label="Beyan Yılı">
+            <FormField label={t(locale, "Beyan Yılı", "Declaration Year")}>
               <input className="field" value={form.declarationYear} onChange={updateField("declarationYear")} />
             </FormField>
-            <FormField label="Üretim Rotası" tooltip="bf_bof">
+            <FormField label={t(locale, "Üretim Rotası", "Production Route")} tooltip="bf_bof">
               <select className="field" value={form.productionRoute} onChange={updateField("productionRoute")}>
-                <option value="carbon_steel_bf_bof">Karbon Çelik BF/BOF</option>
-                <option value="carbon_steel_dri_eaf">Karbon Çelik DRI/EAF</option>
-                <option value="scrap_eaf">Hurda EAF</option>
+                <option value="carbon_steel_bf_bof">{t(locale, "Karbon Çelik BF/BOF", "Carbon Steel BF/BOF")}</option>
+                <option value="carbon_steel_dri_eaf">{t(locale, "Karbon Çelik DRI/EAF", "Carbon Steel DRI/EAF")}</option>
+                <option value="scrap_eaf">{t(locale, "Hurda EAF", "Scrap EAF")}</option>
                 <option value="primary_aluminium">Primary Aluminium</option>
                 <option value="secondary_aluminium">Secondary Aluminium</option>
               </select>
             </FormField>
-            <FormField label="Üretim Metodu">
+            <FormField label={t(locale, "Üretim Metodu", "Production Method")}>
               <input className="field" value={form.productionMethod} onChange={updateField("productionMethod")} />
             </FormField>
-            <FormField label="Üretilen Miktar (ton)">
+            <FormField label={t(locale, "Üretilen Miktar (ton)", "Produced Quantity (tons)")}>
               <input className="field" value={form.producedQuantityTons} onChange={updateField("producedQuantityTons")} />
             </FormField>
-            <FormField label="Hesaplama Yöntemi" tooltip="monitoring_plan">
+            <FormField label={t(locale, "Hesaplama Yöntemi", "Calculation Method")} tooltip="monitoring_plan">
               <select className="field" value={form.calculationMethod} onChange={updateField("calculationMethod")}>
                 <option value="default">Default</option>
                 <option value="actual">Actual</option>
                 <option value="mixed">Mixed</option>
               </select>
             </FormField>
-            <FormField label="Doğrulanmış Actual Veri Var mı?" tooltip="secondary_aluminium">
+            <FormField label={t(locale, "Doğrulanmış Actual Veri Var mı?", "Is verified actual data available?")} tooltip="secondary_aluminium">
               <select className="field" value={form.hasActualData} onChange={updateField("hasActualData")}>
-                <option value="hayir">Hayır, default ile ilerle</option>
-                <option value="evet">Evet, actual veri ile ilerleyeceğim</option>
+                <option value="hayir">{t(locale, "Hayır, default ile ilerle", "No, continue with defaults")}</option>
+                <option value="evet">{t(locale, "Evet, actual veri ile ilerleyeceğim", "Yes, I will continue with actual data")}</option>
               </select>
             </FormField>
           </div>
@@ -401,24 +416,24 @@ function ReportWizard({ onShipmentCreated }) {
         {currentStep === 3 ? (
           <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
             <div className="rounded-3xl bg-mist p-5">
-              <div className="text-sm font-semibold text-slate-500">Özet</div>
+              <div className="text-sm font-semibold text-slate-500">{t(locale, "Özet", "Summary")}</div>
               <div className="mt-4 space-y-3 text-sm text-slate-700">
-                <div><span className="font-semibold">Sevkiyat:</span> {form.shipmentReference}</div>
-                <div><span className="font-semibold">CN Kodu:</span> {form.cnCode}</div>
-                <div><span className="font-semibold">Algılanan sektör:</span> {detectedSectorLabel}</div>
-                <div><span className="font-semibold">Tesis:</span> {form.installationName}</div>
-                <div><span className="font-semibold">Metodoloji:</span> {form.calculationMethod}</div>
-                <div><span className="font-semibold">Üretim rotası:</span> {form.productionRoute}</div>
-                <div><span className="font-semibold">Miktar:</span> {form.quantityTons} ton</div>
-                <div><span className="font-semibold">Veri güveni:</span> {submitResult?.calculation?.confidence_label || confidencePreview}</div>
+                <div><span className="font-semibold">{t(locale, "Sevkiyat", "Shipment")}:</span> {form.shipmentReference}</div>
+                <div><span className="font-semibold">{t(locale, "CN Kodu", "CN Code")}:</span> {form.cnCode}</div>
+                <div><span className="font-semibold">{t(locale, "Algılanan sektör", "Detected sector")}:</span> {detectedSectorLabel}</div>
+                <div><span className="font-semibold">{t(locale, "Tesis", "Installation")}:</span> {form.installationName}</div>
+                <div><span className="font-semibold">{t(locale, "Metodoloji", "Methodology")}:</span> {form.calculationMethod}</div>
+                <div><span className="font-semibold">{t(locale, "Üretim rotası", "Production route")}:</span> {form.productionRoute}</div>
+                <div><span className="font-semibold">{t(locale, "Miktar", "Quantity")}:</span> {form.quantityTons} {t(locale, "ton", "tons")}</div>
+                <div><span className="font-semibold">{t(locale, "Veri güveni", "Data confidence")}:</span> {submitResult?.calculation?.confidence_label || confidencePreview}</div>
               </div>
             </div>
 
             <div className="rounded-3xl bg-ink p-5 text-white">
-              <div className="text-sm font-semibold text-white/60">Sistem Tahmini</div>
+              <div className="text-sm font-semibold text-white/60">{t(locale, "Sistem Tahmini", "System Estimate")}</div>
               <div className="mt-3 text-3xl font-extrabold">{estimatedSpecificEmission} tCO2e/ton</div>
               <p className="mt-3 text-sm text-white/70">
-                Sistem CN kodunu doğrular, veri güvenini hesaplar ve rapora uygunluk statüsü atar.
+                {t(locale, "Sistem CN kodunu doğrular, veri güvenini hesaplar ve rapora uygunluk statüsü atar.", "The system validates the CN code, calculates data confidence and assigns a compliance status.")}
               </p>
               <button
                 type="button"
@@ -426,16 +441,16 @@ function ReportWizard({ onShipmentCreated }) {
                 disabled={isSubmitting}
                 className="mt-5 w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSubmitting ? "Uyum çıktısı hazırlanıyor..." : "Uyum Kaydını Oluştur"}
+                {isSubmitting ? t(locale, "Uyum çıktısı hazırlanıyor...", "Preparing compliance output...") : t(locale, "Uyum Kaydını Oluştur", "Create Compliance Record")}
               </button>
               {submitResult ? (
                 <div className="mt-4 rounded-2xl bg-white/10 p-4 text-sm text-white">
-                  <div className="font-semibold">Uyum kaydı başarıyla oluşturuldu</div>
-                  <div className="mt-2">Kayıt No: {submitResult.shipment_id}</div>
-                  <div className="mt-1">Durum: {submitResult.calculation.compliance_status_label}</div>
-                  <div className="mt-1">Veri Güveni: {submitResult.calculation.confidence_label}</div>
+                  <div className="font-semibold">{t(locale, "Uyum kaydı başarıyla oluşturuldu", "Compliance record created successfully")}</div>
+                  <div className="mt-2">{t(locale, "Kayıt No", "Record ID")}: {submitResult.shipment_id}</div>
+                  <div className="mt-1">{t(locale, "Durum", "Status")}: {submitResult.calculation.compliance_status_label}</div>
+                  <div className="mt-1">{t(locale, "Veri Güveni", "Data Confidence")}: {submitResult.calculation.confidence_label}</div>
                   <div className="mt-1">
-                    Veri Kalitesi: {submitResult.calculation.data_quality_summary.actual_fields_count} actual / {submitResult.calculation.data_quality_summary.default_fields_count} default
+                    {t(locale, "Veri Kalitesi", "Data Quality")}: {submitResult.calculation.data_quality_summary.actual_fields_count} actual / {submitResult.calculation.data_quality_summary.default_fields_count} default
                   </div>
                   <button
                     type="button"
@@ -443,7 +458,7 @@ function ReportWizard({ onShipmentCreated }) {
                     disabled={isDownloading}
                     className="mt-4 w-full rounded-2xl border border-white/20 bg-sand px-4 py-3 text-sm font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {isDownloading ? "PDF hazırlanıyor..." : "PDF İndir"}
+                    {isDownloading ? t(locale, "PDF hazırlanıyor...", "Preparing PDF...") : t(locale, "PDF İndir", "Download PDF")}
                   </button>
                 </div>
               ) : null}
@@ -458,7 +473,7 @@ function ReportWizard({ onShipmentCreated }) {
 
         <div className="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-between">
           <button type="button" onClick={prevStep} className="btn-secondary" disabled={currentStep === 0}>
-            Geri
+            {t(locale, "Geri", "Back")}
           </button>
           <button
             type="button"
@@ -466,7 +481,7 @@ function ReportWizard({ onShipmentCreated }) {
             className="btn-primary"
             disabled={currentStep === steps.length - 1}
           >
-            Sonraki Adım
+            {t(locale, "Sonraki Adım", "Next Step")}
           </button>
         </div>
       </div>

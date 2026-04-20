@@ -11,6 +11,7 @@ import {
   listPlans,
   listShipments,
 } from "./lib/api";
+import { t, translateComplianceStatus, translateConfidence } from "./lib/i18n";
 
 const sectorLabels = {
   iron_steel: "Demir-Çelik",
@@ -69,7 +70,7 @@ function UsageMeter({ label, used = 0, limit = 0 }) {
   );
 }
 
-function ArchiveView({ shipments, loading, error }) {
+function ArchiveView({ shipments, loading, error, locale }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sectorFilter, setSectorFilter] = useState("all");
@@ -112,10 +113,16 @@ function ArchiveView({ shipments, loading, error }) {
 
   return (
     <div className="panel p-6">
-      <div className="text-sm font-semibold text-slate-500">Arşiv</div>
-      <h2 className="mt-1 text-2xl font-extrabold text-ink">Canlı CBAM kayıt arşivi</h2>
+      <div className="text-sm font-semibold text-slate-500">{t(locale, "Arşiv", "Archive")}</div>
+      <h2 className="mt-1 text-2xl font-extrabold text-ink">
+        {t(locale, "Canlı CBAM kayıt arşivi", "Live CBAM records archive")}
+      </h2>
       <p className="mt-2 max-w-3xl text-sm text-slate-600">
-        Uyum durumuna, sektöre ve referansa göre filtreleyin; eski beyan PDF’lerini tek tıkla yeniden indirin.
+        {t(
+          locale,
+          "Uyum durumuna, sektöre ve referansa göre filtreleyin; eski beyan PDF’lerini tek tıkla yeniden indirin.",
+          "Filter by compliance status, sector and reference; re-download declaration PDFs with one click.",
+        )}
       </p>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-[1.4fr_1fr_1fr]">
@@ -123,10 +130,10 @@ function ArchiveView({ shipments, loading, error }) {
           className="field"
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
-          placeholder="Referans veya firma ara"
+          placeholder={t(locale, "Referans veya firma ara", "Search reference or company")}
         />
         <select className="field" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-          <option value="all">Tüm durumlar</option>
+          <option value="all">{t(locale, "Tüm durumlar", "All statuses")}</option>
           {statusOptions.map((status) => (
             <option key={status} value={status}>
               {status}
@@ -134,7 +141,7 @@ function ArchiveView({ shipments, loading, error }) {
           ))}
         </select>
         <select className="field" value={sectorFilter} onChange={(event) => setSectorFilter(event.target.value)}>
-          <option value="all">Tüm sektörler</option>
+          <option value="all">{t(locale, "Tüm sektörler", "All sectors")}</option>
           {sectorOptions.map((sector) => (
             <option key={sector} value={sector}>
               {getSectorLabel(sector)}
@@ -143,23 +150,23 @@ function ArchiveView({ shipments, loading, error }) {
         </select>
       </div>
 
-      {loading ? <p className="mt-4 text-sm text-slate-600">Kayıtlar yükleniyor...</p> : null}
+      {loading ? <p className="mt-4 text-sm text-slate-600">{t(locale, "Kayıtlar yükleniyor...", "Loading records...")}</p> : null}
       {!loading && error ? <p className="mt-4 text-sm font-medium text-clay">{error}</p> : null}
       {!loading && filteredShipments.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-600">Filtrelere uyan kayıt bulunmuyor.</p>
+        <p className="mt-4 text-sm text-slate-600">{t(locale, "Filtrelere uyan kayıt bulunmuyor.", "No records match the selected filters.")}</p>
       ) : null}
       {!loading && filteredShipments.length > 0 ? (
         <div className="mt-6 overflow-x-auto">
           <table className="min-w-full text-left">
             <thead>
               <tr className="border-b border-slate-200 text-sm text-slate-500">
-                <th className="pb-3 font-semibold">Referans</th>
-                <th className="pb-3 font-semibold">Firma</th>
-                <th className="pb-3 font-semibold">Sektör</th>
-                <th className="pb-3 font-semibold">Durum</th>
-                <th className="pb-3 font-semibold">Veri Güveni</th>
-                <th className="pb-3 font-semibold">Emisyon</th>
-                <th className="pb-3 font-semibold">Aksiyon</th>
+                <th className="pb-3 font-semibold">{t(locale, "Referans", "Reference")}</th>
+                <th className="pb-3 font-semibold">{t(locale, "Firma", "Company")}</th>
+                <th className="pb-3 font-semibold">{t(locale, "Sektör", "Sector")}</th>
+                <th className="pb-3 font-semibold">{t(locale, "Durum", "Status")}</th>
+                <th className="pb-3 font-semibold">{t(locale, "Veri Güveni", "Confidence")}</th>
+                <th className="pb-3 font-semibold">{t(locale, "Emisyon", "Emissions")}</th>
+                <th className="pb-3 font-semibold">{t(locale, "Aksiyon", "Action")}</th>
               </tr>
             </thead>
             <tbody>
@@ -168,8 +175,8 @@ function ArchiveView({ shipments, loading, error }) {
                   <td className="py-4 font-semibold">{shipment.payload.import_details.shipment_reference}</td>
                   <td className="py-4">{shipment.payload.facility.installation_name}</td>
                   <td className="py-4">{getSectorLabel(shipment.payload.goods.sector)}</td>
-                  <td className="py-4">{shipment.calculation.compliance_status_label}</td>
-                  <td className="py-4">{shipment.calculation.confidence_label}</td>
+                  <td className="py-4">{translateComplianceStatus(locale, shipment.calculation.compliance_status_label)}</td>
+                  <td className="py-4">{translateConfidence(locale, shipment.calculation.confidence_label)}</td>
                   <td className="py-4">{shipment.calculation.total_embedded_emissions_tco2} tCO2e</td>
                   <td className="py-4">
                     <button
@@ -178,7 +185,9 @@ function ArchiveView({ shipments, loading, error }) {
                       onClick={() => handleDownload(shipment.shipment_id)}
                       disabled={downloadingId === shipment.shipment_id}
                     >
-                      {downloadingId === shipment.shipment_id ? "Hazırlanıyor..." : "PDF'i Yeniden İndir"}
+                      {downloadingId === shipment.shipment_id
+                        ? t(locale, "Hazırlanıyor...", "Preparing...")
+                        : t(locale, "PDF'i Yeniden İndir", "Download PDF Again")}
                     </button>
                   </td>
                 </tr>
@@ -191,29 +200,33 @@ function ArchiveView({ shipments, loading, error }) {
   );
 }
 
-function CoefficientsView({ coefficients, loading, error }) {
+function CoefficientsView({ coefficients, loading, error, locale }) {
   return (
     <div className="panel p-6">
-      <div className="text-sm font-semibold text-slate-500">Katsayılar</div>
-      <h2 className="mt-1 text-2xl font-extrabold text-ink">Canlı varsayılan değer kataloğu</h2>
+      <div className="text-sm font-semibold text-slate-500">{t(locale, "Katsayılar", "Coefficients")}</div>
+      <h2 className="mt-1 text-2xl font-extrabold text-ink">{t(locale, "Canlı varsayılan değer kataloğu", "Live default values catalog")}</h2>
       <p className="mt-2 max-w-3xl text-sm text-slate-600">
-        Bu ekran backend’deki referans değer tablosundan beslenir ve hesap motorunun kullandığı default benchmark’ları gösterir.
+        {t(
+          locale,
+          "Bu ekran backend’deki referans değer tablosundan beslenir ve hesap motorunun kullandığı default benchmark’ları gösterir.",
+          "This screen is fed by the backend reference table and shows the default benchmarks used by the calculation engine.",
+        )}
       </p>
-      {loading ? <p className="mt-4 text-sm text-slate-600">Katsayılar yükleniyor...</p> : null}
+      {loading ? <p className="mt-4 text-sm text-slate-600">{t(locale, "Katsayılar yükleniyor...", "Loading coefficients...")}</p> : null}
       {!loading && error ? <p className="mt-4 text-sm font-medium text-clay">{error}</p> : null}
       {!loading && !error && coefficients.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-600">Henüz katsayı kaydı bulunmuyor.</p>
+        <p className="mt-4 text-sm text-slate-600">{t(locale, "Henüz katsayı kaydı bulunmuyor.", "No coefficient records yet.")}</p>
       ) : null}
       {!loading && coefficients.length > 0 ? (
         <div className="mt-6 overflow-x-auto">
           <table className="min-w-full text-left">
             <thead>
               <tr className="border-b border-slate-200 text-sm text-slate-500">
-                <th className="pb-3 font-semibold">CN Kodu</th>
-                <th className="pb-3 font-semibold">Sektör</th>
-                <th className="pb-3 font-semibold">Menşe</th>
-                <th className="pb-3 font-semibold">Rota</th>
-                <th className="pb-3 font-semibold">Toplam Değer</th>
+                <th className="pb-3 font-semibold">{t(locale, "CN Kodu", "CN Code")}</th>
+                <th className="pb-3 font-semibold">{t(locale, "Sektör", "Sector")}</th>
+                <th className="pb-3 font-semibold">{t(locale, "Menşe", "Origin")}</th>
+                <th className="pb-3 font-semibold">{t(locale, "Rota", "Route")}</th>
+                <th className="pb-3 font-semibold">{t(locale, "Toplam Değer", "Total Value")}</th>
               </tr>
             </thead>
             <tbody>
@@ -234,13 +247,13 @@ function CoefficientsView({ coefficients, loading, error }) {
   );
 }
 
-function SettingsView({ planCatalog, loading, error }) {
+function SettingsView({ planCatalog, loading, error, locale }) {
   if (loading) {
-    return <div className="panel p-6 text-sm text-slate-600">Plan ve yetkilendirme yükleniyor...</div>;
+    return <div className="panel p-6 text-sm text-slate-600">{t(locale, "Plan ve yetkilendirme yükleniyor...", "Loading plans and access rules...")}</div>;
   }
 
   if (error || !planCatalog) {
-    return <div className="panel p-6 text-sm font-medium text-clay">{error || "Plan bilgisi alınamadı."}</div>;
+    return <div className="panel p-6 text-sm font-medium text-clay">{error || t(locale, "Plan bilgisi alınamadı.", "Plan information could not be loaded.")}</div>;
   }
 
   const { current_access: currentAccess, plans, trial_days: trialDays } = planCatalog;
@@ -386,6 +399,7 @@ function SettingsView({ planCatalog, loading, error }) {
 
 function App() {
   const [activeView, setActiveView] = useState("dashboard");
+  const [locale, setLocale] = useState("tr");
   const [shipments, setShipments] = useState([]);
   const [coefficients, setCoefficients] = useState([]);
   const [planCatalog, setPlanCatalog] = useState(null);
@@ -443,7 +457,7 @@ function App() {
 
   const liveTrend = useMemo(() => {
     if (shipments.length === 0) {
-      return emissionTrend;
+      return emissionTrend.map((entry) => ({ ...entry, value: 0 }));
     }
     return shipments.slice(0, 6).reverse().map((shipment, index) => ({
       month: `K${index + 1}`,
@@ -454,19 +468,20 @@ function App() {
   const renderView = () => {
     switch (activeView) {
       case "yeni-rapor":
-        return <ReportWizard onShipmentCreated={loadShipments} />;
+        return <ReportWizard onShipmentCreated={loadShipments} locale={locale} />;
       case "arsiv":
-        return <ArchiveView shipments={shipments} loading={loadingShipments} error={shipmentsError} />;
+        return <ArchiveView shipments={shipments} loading={loadingShipments} error={shipmentsError} locale={locale} />;
       case "katsayilar":
         return (
           <CoefficientsView
             coefficients={coefficients}
             loading={loadingCoefficients}
             error={coefficientsError}
+            locale={locale}
           />
         );
       case "ayarlar":
-        return <SettingsView planCatalog={planCatalog} loading={loadingPlans} error={plansError} />;
+        return <SettingsView planCatalog={planCatalog} loading={loadingPlans} error={plansError} locale={locale} />;
       default:
         return (
           <DashboardHome
@@ -475,6 +490,7 @@ function App() {
             loading={loadingShipments}
             error={shipmentsError}
             workspaceAccess={planCatalog?.current_access || null}
+            locale={locale}
           />
         );
     }
@@ -487,6 +503,7 @@ function App() {
           activeView={activeView}
           onChangeView={setActiveView}
           workspaceAccess={planCatalog?.current_access || null}
+          locale={locale}
         />
 
         <main className="min-w-0">
@@ -494,6 +511,8 @@ function App() {
             activeView={activeView}
             onStartReport={() => setActiveView("yeni-rapor")}
             workspaceAccess={planCatalog?.current_access || null}
+            locale={locale}
+            onLocaleChange={setLocale}
           />
           {renderView()}
         </main>

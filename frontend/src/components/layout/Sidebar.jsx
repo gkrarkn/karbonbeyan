@@ -1,7 +1,8 @@
-import { menuItems } from "../../data/mockData";
+import { getMenuItems, t } from "../../lib/i18n";
 import BrandLogo from "../brand/BrandLogo";
 
-function Sidebar({ activeView, onChangeView, workspaceAccess }) {
+function Sidebar({ activeView, onChangeView, workspaceAccess, locale }) {
+  const menuItems = getMenuItems(locale);
   return (
     <aside className="panel flex h-full min-h-[calc(100vh-2rem)] w-full flex-col justify-between overflow-hidden bg-ink text-white lg:max-w-[280px]">
       <div className="space-y-8 p-6">
@@ -10,11 +11,15 @@ function Sidebar({ activeView, onChangeView, workspaceAccess }) {
         <div className="rounded-3xl bg-white/8 p-5">
           <div className="text-xs uppercase tracking-[0.28em] text-white/60">KarbonBeyan Vision</div>
           <div className="mt-3 text-2xl font-extrabold leading-tight">
-            CBAM uyum sürecinizi
+            {t(locale, "CBAM uyum sürecinizi", "Manage your CBAM process")}
             <span className="block text-sand">yönetin ve riskinizi görün</span>
           </div>
           <p className="mt-3 text-sm text-white/72">
-            Veri kalitesi, uygunluk statüsü, doğrulama ve tedarikçi akışını tek yerden yönetin.
+            {t(
+              locale,
+              "Veri kalitesi, uygunluk statüsü, doğrulama ve tedarikçi akışını tek yerden yönetin.",
+              "Control data quality, compliance status, verification and supplier flows from one place.",
+            )}
           </p>
         </div>
 
@@ -42,11 +47,19 @@ function Sidebar({ activeView, onChangeView, workspaceAccess }) {
 
       <div className="border-t border-white/10 p-6">
         <div className="rounded-2xl bg-white/8 p-4">
-          <div className="text-sm font-semibold">7 Günlük Full Trial</div>
+          <div className="text-sm font-semibold">{t(locale, "7 Günlük Full Trial", "7-Day Full Trial")}</div>
           <p className="mt-2 text-sm text-white/65">
             {workspaceAccess?.trial_status === "active"
-              ? `${workspaceAccess.trial_days_remaining} gün boyunca tüm modüller açık. Supplier Data Collection ve Verification Workspace dahil.`
-              : "Trial süresi tamamlandığında plan ve kullanım limiti bazlı erişim devreye girer."}
+              ? t(
+                  locale,
+                  `${workspaceAccess.trial_days_remaining} gün boyunca tüm modüller açık. Supplier Data Collection ve Verification Workspace dahil.`,
+                  `All modules are open for ${workspaceAccess.trial_days_remaining} more days, including Supplier Data Collection and Verification Workspace.`,
+                )
+              : t(
+                  locale,
+                  "Trial süresi tamamlandığında plan ve kullanım limiti bazlı erişim devreye girer.",
+                  "When the trial ends, access rules switch to plan-based permissions and usage limits.",
+                )}
           </p>
         </div>
       </div>
