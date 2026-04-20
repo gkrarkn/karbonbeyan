@@ -31,13 +31,13 @@ def _build_data_quality_summary(
 
     if actual_share >= 0.85:
         confidence_level = ConfidenceLevel.HIGH
-        summary_text = "Veri setinin büyük bölümü gerçek ölçüm ve doğrulanmış operator verisine dayanıyor."
+        summary_text = "Veri setinin büyük bölümü actual ölçüm ve doğrulanmış operatör verisine dayanıyor; resmi beyana güçlü şekilde yaklaştınız."
     elif actual_share >= 0.4:
         confidence_level = ConfidenceLevel.MEDIUM
-        summary_text = "Rapor karma veri yapısında; bazı alanlar default değerlerle tamamlandı."
+        summary_text = "Kayıt karma veri yapısında; resmi beyan öncesi default kullanılan alanlar azaltılmalı."
     else:
         confidence_level = ConfidenceLevel.LOW
-        summary_text = "Rapor ağırlıklı olarak default değerlere dayanıyor; resmi beyan öncesi actual veri önerilir."
+        summary_text = "Bu hesaplama tahmini verilere dayanıyor; resmi beyan için uygun değil ve actual veri ile güçlendirilmeli."
 
     return DataQualitySummary(
         confidence_level=confidence_level,
@@ -70,9 +70,9 @@ def _resolve_compliance_status(
 
 def _confidence_label(confidence_level: ConfidenceLevel) -> str:
     return {
-        ConfidenceLevel.HIGH: "Yüksek Güven",
-        ConfidenceLevel.MEDIUM: "Orta Güven",
-        ConfidenceLevel.LOW: "Düşük Güven",
+        ConfidenceLevel.HIGH: "Yüksek güven: resmi beyana yakın",
+        ConfidenceLevel.MEDIUM: "Orta güven: iç inceleme gerekli",
+        ConfidenceLevel.LOW: "Düşük güven: resmi beyan için uygun değil",
     }[confidence_level]
 
 

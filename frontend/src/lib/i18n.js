@@ -42,6 +42,9 @@ const confidenceMap = {
   "Düşük Güven": "Low Confidence",
   "Orta Güven": "Medium Confidence",
   "Yüksek Güven": "High Confidence",
+  "Yüksek güven: resmi beyana yakın": "High confidence: close to formal declaration",
+  "Orta güven: iç inceleme gerekli": "Medium confidence: internal review required",
+  "Düşük güven: resmi beyan için uygun değil": "Low confidence: not ready for formal declaration",
 };
 
 const roleMap = {

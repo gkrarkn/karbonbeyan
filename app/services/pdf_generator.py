@@ -67,9 +67,9 @@ def _confidence_label(record: ShipmentRecord) -> str:
     if not _is_english(record):
         return label
     return {
-        "Yüksek Güven": "High Confidence",
-        "Orta Güven": "Medium Confidence",
-        "Düşük Güven": "Low Confidence",
+        "Yüksek güven: resmi beyana yakın": "High confidence: close to formal declaration",
+        "Orta güven: iç inceleme gerekli": "Medium confidence: internal review required",
+        "Düşük güven: resmi beyan için uygun değil": "Low confidence: not ready for formal declaration",
     }.get(label, label)
 
 
@@ -92,8 +92,68 @@ def _data_quality_summary(record: ShipmentRecord) -> str:
     return {
         "high": "Most of the dataset is supported by actual measurements and verified operator data.",
         "medium": "The report uses a mixed data structure; some fields were completed with default values.",
-        "low": "The report relies mainly on default values; actual data is recommended before formal submission.",
+        "low": "This calculation relies on estimated data and is not ready for formal declaration without stronger actual evidence.",
     }.get(level, record.calculation.data_quality_summary.summary_text)
+
+
+def _next_actions(record: ShipmentRecord) -> list[str]:
+    actions: list[str] = []
+    is_en = _is_english(record)
+
+    if record.calculation.data_quality_summary.default_share > 0:
+        actions.append(
+            "Request actual emissions data from the supplier"
+            if is_en
+            else "Üreticiden actual emisyon verisi talep edin"
+        )
+        actions.append(
+            "Reduce reliance on default values before formal declaration"
+            if is_en
+            else "Resmi beyan öncesi varsayılan değer kullanımını azaltın"
+        )
+
+    if record.payload.verification.verification_status != "verified":
+        actions.append(
+            "Arrange third-party verification and evidence collection"
+            if is_en
+            else "Bağımsız doğrulama ve kanıt toplama sürecini planlayın"
+        )
+
+    if record.calculation.confidence_level.value == "medium":
+        actions.append(
+            "Close the internal review and confirm critical data points"
+            if is_en
+            else "İç incelemeyi kapatın ve kritik veri noktalarını teyit edin"
+        )
+
+    if record.calculation.confidence_level.value == "high" and record.payload.verification.verification_status == "verified":
+        actions.append(
+            "Prepare the final declaration package for submission"
+            if is_en
+            else "Nihai beyan paketini gönderim için hazırlayın"
+        )
+
+    deduped: list[str] = []
+    for action in actions:
+        if action not in deduped:
+            deduped.append(action)
+
+    fallback_actions = [
+        "Keep evidence files and declaration data aligned for submission"
+        if is_en
+        else "Kanıt dosyalarını ve beyan verilerini gönderim için hizalı tutun",
+        "Confirm the installation and operator details before submission"
+        if is_en
+        else "Gönderim öncesi tesis ve operatör bilgilerini teyit edin",
+        "Prepare the final declaration package for submission"
+        if is_en
+        else "Nihai beyan paketini gönderim için hazırlayın",
+    ]
+    for action in fallback_actions:
+        if action not in deduped:
+            deduped.append(action)
+
+    return deduped[:3]
 
 
 def _find_font_path(candidates: list[str]) -> str | None:
@@ -412,6 +472,20 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
             _pdf_text(record, "Default payı", "Default share") + f": %{record.calculation.data_quality_summary.default_share * 100:.0f}",
             _pdf_text(record, "Not", "Note") + f": {_data_quality_summary(record)}",
         ],
+        width - 2 * margin,
+    )
+
+    next_action_lines = [
+        f"1. {_next_actions(record)[0]}",
+        f"2. {_next_actions(record)[1]}",
+        f"3. {_next_actions(record)[2]}",
+    ]
+    y = _draw_key_value_block(
+        pdf,
+        margin,
+        y,
+        _pdf_text(record, "Sonraki Adımlar", "Next Actions"),
+        next_action_lines,
         width - 2 * margin,
     )
 

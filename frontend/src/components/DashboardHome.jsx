@@ -4,6 +4,84 @@ import { t, translateComplianceStatus, translateConfidence, translateRole } from
 import { highestRiskRecords, pendingVerifications, upcomingDeclarations } from "../data/mockData";
 import EmissionsChart from "./charts/EmissionsChart";
 
+function getRecommendedActions(locale, shipments) {
+  const lowConfidence = shipments.filter(
+    (shipment) => shipment.calculation.confidence_level === "low",
+  );
+  const defaultHeavy = shipments.filter(
+    (shipment) => shipment.calculation.data_quality_summary.default_share > 0,
+  );
+  const pendingVerification = shipments.filter(
+    (shipment) => shipment.payload.verification.verification_status === "pending",
+  );
+
+  const actions = [];
+
+  if (lowConfidence.length > 0) {
+    actions.push({
+      title: t(locale, "Üreticiden actual emisyon verisi isteyin", "Request actual emissions data from the supplier"),
+      body: t(
+        locale,
+        "Düşük güvenli kayıtlar tahmini verilere dayanıyor; resmi beyan öncesi actual veri toplanmalı.",
+        "Low-confidence records rely on estimated data; collect actual emissions data before formal declaration.",
+      ),
+    });
+  }
+
+  if (defaultHeavy.length > 0) {
+    actions.push({
+      title: t(locale, "Default kullanımını azaltın", "Reduce reliance on default values"),
+      body: t(
+        locale,
+        "Varsayılan değer kullanılan alanları görünür kılın ve bu kayıtları öncelikli iç takip listesine alın.",
+        "Identify fields using default values and move those records into your priority internal follow-up queue.",
+      ),
+    });
+  }
+
+  if (pendingVerification.length > 0) {
+    actions.push({
+      title: t(locale, "Bağımsız doğrulamayı planlayın", "Arrange third-party verification"),
+      body: t(
+        locale,
+        "Verification bekleyen kayıtlar resmi beyanı bloklar; doğrulayıcı ataması ve belge akışı planlanmalı.",
+        "Pending verification blocks formal declaration; assign a verifier and plan the evidence flow.",
+      ),
+    });
+  }
+
+  if (actions.length === 0) {
+    actions.push(
+      {
+        title: t(locale, "Tahmini ve gerçek veri farkını görün", "See the gap between estimated and actual data"),
+        body: t(
+          locale,
+          "İlk sevkiyatları içeri aldığınızda sistem veri güvenini ve risk seviyesini otomatik gösterecek.",
+          "Once your first shipments are inside, the system will automatically expose confidence and reporting risk.",
+        ),
+      },
+      {
+        title: t(locale, "Eksik alanları anında tespit edin", "Spot missing fields instantly"),
+        body: t(
+          locale,
+          "Takımınız hangi kaydın default ile ilerlediğini ve hangisinin güçlendirilmesi gerektiğini tek ekranda görecek.",
+          "Your team will see which records rely on defaults and which ones must be strengthened before declaration.",
+        ),
+      },
+      {
+        title: t(locale, "Resmi beyana hazır olup olmadığınızı bilin", "Know whether you are ready for formal declaration"),
+        body: t(
+          locale,
+          "Uygunluk statüsü ve verification kuyruğu sayesinde hangi kaydın gerçekten hazır olduğunu net göreceksiniz.",
+          "Compliance status and verification queues make it clear which records are actually ready for formal declaration.",
+        ),
+      },
+    );
+  }
+
+  return actions.slice(0, 3);
+}
+
 function DashboardHome({
   trendData,
   shipments,
@@ -49,6 +127,21 @@ function DashboardHome({
     .reduce((sum, shipment) => sum + Number(shipment.calculation.total_embedded_emissions_tco2 || 0), 0)
     .toFixed(1);
 
+  const avgActualShare = hasLiveShipments
+    ? Math.round(
+        (shipments.reduce((sum, shipment) => sum + shipment.calculation.data_quality_summary.actual_share, 0) /
+          shipments.length) *
+          100,
+      )
+    : 0;
+  const avgDefaultShare = hasLiveShipments
+    ? Math.round(
+        (shipments.reduce((sum, shipment) => sum + shipment.calculation.data_quality_summary.default_share, 0) /
+          shipments.length) *
+          100,
+      )
+    : 0;
+
   const avgConfidence =
     shipments.length > 0
       ? shipments.filter((shipment) => shipment.calculation.confidence_level === "high").length > shipments.length / 2
@@ -68,10 +161,31 @@ function DashboardHome({
         <div className="grid gap-6 bg-[linear-gradient(135deg,#0E4FAF_0%,#0B3F91_55%,#0B2447_100%)] p-6 text-white xl:grid-cols-[1.2fr_0.8fr]">
           <div>
             <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/65">KarbonBeyan Vision</div>
-            <h2 className="mt-3 text-3xl font-extrabold">{t(locale, "CBAM Uyum Sürecinizi Yönetin ve Riskinizi Görün", "Manage Your CBAM Process and See Your Risk")}</h2>
+            <h2 className="mt-3 text-3xl font-extrabold">
+              {t(
+                locale,
+                "AB'ye yaptığınız sevkiyatlarda karbon maliyetinizi görün, raporlama riskinizi azaltın",
+                "See the carbon cost of your EU shipments and reduce reporting risk",
+              )}
+            </h2>
             <p className="mt-3 max-w-2xl text-sm text-white/75">
-              {t(locale, "Hesap üretmekten öte; uygunluk statüsü, veri güveni, doğrulama kuyruğu ve tedarikçi akışını tek kontrol merkezinden yönetin.", "Go beyond calculations and manage compliance status, confidence, verification queues and supplier flows from one control center.")}
+              {t(
+                locale,
+                "Tahmini ve gerçek veri farkını görün, eksik alanları anında tespit edin ve resmi beyana hazır olup olmadığınızı tek panelden bilin.",
+                "See the gap between estimated and actual data, spot missing fields instantly and know whether you are ready for formal declaration from one panel.",
+              )}
             </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              {[
+                t(locale, "Tahmini ve gerçek veri farkını görün", "See the gap between estimated and actual data"),
+                t(locale, "Eksik alanları anında tespit edin", "Spot missing fields instantly"),
+                t(locale, "Resmi beyana hazır olup olmadığınızı bilin", "Know whether you are ready for formal declaration"),
+              ].map((item) => (
+                <div key={item} className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-white/90">
+                  {item}
+                </div>
+              ))}
+            </div>
             <div className="mt-5 flex flex-wrap gap-3">
               <button type="button" onClick={onStartReport} className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-[#0E4FAF] shadow-sm transition hover:translate-y-[-1px]">
                 {t(locale, "Ücretsiz Başla", "Start Free")}
@@ -262,7 +376,7 @@ function DashboardHome({
 
         <div className="panel p-6">
           <div className="text-sm font-semibold text-slate-500">En Riskli 5 Kayıt</div>
-          <h3 className="mt-1 text-xl font-bold text-ink">Öncelikli müdahale listesi</h3>
+          <h3 className="mt-1 text-xl font-bold text-ink">{t(locale, "Öncelikli müdahale listesi", "Priority intervention list")}</h3>
           <div className="mt-5 space-y-4">
             {(hasLiveShipments
               ? riskyShipments.slice(0, 5).map((shipment) => ({
@@ -338,42 +452,49 @@ function DashboardHome({
         </div>
 
         <div className="panel p-6">
-          <div className="text-sm font-semibold text-slate-500">Veri Güveni</div>
-          <h3 className="mt-1 text-xl font-bold text-ink">Actual vs Default dağılımı</h3>
+          <div className="text-sm font-semibold text-slate-500">{t(locale, "Veri Güveni", "Data Confidence")}</div>
+          <h3 className="mt-1 text-xl font-bold text-ink">{t(locale, "Actual vs Default dağılımı", "Actual vs Default mix")}</h3>
           <div className="mt-6 space-y-4">
             <div className="rounded-2xl bg-mist p-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-slate-700">Actual alanlar</span>
-                <span className="text-sm font-bold text-pine">
-                  %{hasLiveShipments ? Math.round((shipments.reduce((sum, shipment) => sum + shipment.calculation.data_quality_summary.actual_share, 0) / shipments.length) * 100) : 0}
-                </span>
+                <span className="text-sm font-semibold text-slate-700">{t(locale, "Actual alanlar", "Actual fields")}</span>
+                <span className="text-sm font-bold text-pine">%{avgActualShare}</span>
               </div>
               <div className="mt-3 h-3 rounded-full bg-white">
                 <div
                   className="h-3 rounded-full bg-pine"
-                  style={{
-                    width: `${hasLiveShipments ? Math.round((shipments.reduce((sum, shipment) => sum + shipment.calculation.data_quality_summary.actual_share, 0) / shipments.length) * 100) : 0}%`,
-                  }}
+                  style={{ width: `${avgActualShare}%` }}
                 />
               </div>
             </div>
             <div className="rounded-2xl bg-mist p-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-slate-700">Default alanlar</span>
-                <span className="text-sm font-bold text-clay">
-                  %{hasLiveShipments ? Math.round((shipments.reduce((sum, shipment) => sum + shipment.calculation.data_quality_summary.default_share, 0) / shipments.length) * 100) : 0}
-                </span>
+                <span className="text-sm font-semibold text-slate-700">{t(locale, "Default alanlar", "Default fields")}</span>
+                <span className="text-sm font-bold text-clay">%{avgDefaultShare}</span>
               </div>
               <div className="mt-3 h-3 rounded-full bg-white">
                 <div
                   className="h-3 rounded-full bg-clay"
-                  style={{
-                    width: `${hasLiveShipments ? Math.round((shipments.reduce((sum, shipment) => sum + shipment.calculation.data_quality_summary.default_share, 0) / shipments.length) * 100) : 0}%`,
-                  }}
+                  style={{ width: `${avgDefaultShare}%` }}
                 />
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="panel p-6">
+        <div className="text-sm font-semibold text-slate-500">{t(locale, "Şimdi Ne Yapmalıyım?", "What Should I Do Next?")}</div>
+        <h3 className="mt-1 text-xl font-bold text-ink">
+          {t(locale, "Durumu değil, aksiyonu ve riski görün", "See the action and the risk, not just the status")}
+        </h3>
+        <div className="mt-5 grid gap-4 xl:grid-cols-3">
+          {getRecommendedActions(locale, shipments).map((action) => (
+            <div key={action.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <div className="text-base font-bold text-ink">{action.title}</div>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{action.body}</p>
+            </div>
+          ))}
         </div>
       </section>
 

@@ -140,8 +140,8 @@ function ReportWizard({ onShipmentCreated, locale = "tr" }) {
   const detectedSectorLabel = cnValidation?.detected_sector_label || t(locale, "Henüz doğrulanmadı", "Not validated yet");
   const confidencePreview =
     form.hasActualData === "evet"
-      ? t(locale, "Orta/Yüksek Güven", "Medium/High Confidence")
-      : t(locale, "Düşük Güven (Default ağırlıklı)", "Low Confidence (default-weighted)");
+      ? t(locale, "Orta güven: iç inceleme gerekli", "Medium confidence: internal review required")
+      : t(locale, "Düşük güven: resmi beyan için uygun değil", "Low confidence: not ready for formal declaration");
 
   const buildPayload = () => ({
     declarant: {
@@ -434,7 +434,17 @@ function ReportWizard({ onShipmentCreated, locale = "tr" }) {
               <div className="text-sm font-semibold text-white/60">{t(locale, "Sistem Tahmini", "System Estimate")}</div>
               <div className="mt-3 text-3xl font-extrabold">{estimatedSpecificEmission} tCO2e/ton</div>
               <p className="mt-3 text-sm text-white/70">
-                {t(locale, "Sistem CN kodunu doğrular, veri güvenini hesaplar ve rapora uygunluk statüsü atar.", "The system validates the CN code, calculates data confidence and assigns a compliance status.")}
+                {form.hasActualData === "evet"
+                  ? t(
+                      locale,
+                      "Sistem CN kodunu doğrular, veri güvenini hesaplar ve iç inceleme için öncelikleri görünür kılar.",
+                      "The system validates the CN code, calculates confidence and highlights what must be reviewed before declaration.",
+                    )
+                  : t(
+                      locale,
+                      "Bu hesaplama tahmini verilere dayanıyor; actual veri ve doğrulama olmadan resmi beyan için uygun değildir.",
+                      "This calculation relies on estimated data; without actual data and verification it is not ready for formal declaration.",
+                    )}
               </p>
               <button
                 type="button"
