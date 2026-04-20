@@ -243,6 +243,7 @@ function ReportWizard({ onShipmentCreated, locale = "tr" }) {
       logo_path: null,
       signatory_name: form.declarantName,
       signatory_title: t(locale, "Yetkili CBAM Beyan Sahibi", "Authorized CBAM Declarant"),
+      output_language: locale,
       show_stamp_box: true,
     },
   });

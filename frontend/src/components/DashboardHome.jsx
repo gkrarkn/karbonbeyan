@@ -1,8 +1,25 @@
+import { useState } from "react";
+
 import { t, translateComplianceStatus, translateConfidence, translateRole } from "../lib/i18n";
 import { highestRiskRecords, pendingVerifications, upcomingDeclarations } from "../data/mockData";
 import EmissionsChart from "./charts/EmissionsChart";
 
-function DashboardHome({ trendData, shipments, loading, error, workspaceAccess, locale }) {
+function DashboardHome({
+  trendData,
+  shipments,
+  loading,
+  error,
+  workspaceAccess,
+  locale,
+  onStartReport,
+  onRequestQuote,
+}) {
+  const [quoteForm, setQuoteForm] = useState({
+    name: "",
+    company: "",
+    email: "",
+    message: "",
+  });
   const hasLiveShipments = shipments.length > 0;
   const pendingShipments = shipments.filter(
     (shipment) => shipment.payload.verification.verification_status === "pending",
@@ -41,6 +58,10 @@ function DashboardHome({ trendData, shipments, loading, error, workspaceAccess, 
           : t(locale, "Orta", "Medium")
       : t(locale, "Orta", "Medium");
 
+  const handleQuoteChange = (field, value) => {
+    setQuoteForm((current) => ({ ...current, [field]: value }));
+  };
+
   return (
     <div className="space-y-6">
       <section className="panel overflow-hidden">
@@ -51,9 +72,23 @@ function DashboardHome({ trendData, shipments, loading, error, workspaceAccess, 
             <p className="mt-3 max-w-2xl text-sm text-white/75">
               {t(locale, "Hesap üretmekten öte; uygunluk statüsü, veri güveni, doğrulama kuyruğu ve tedarikçi akışını tek kontrol merkezinden yönetin.", "Go beyond calculations and manage compliance status, confidence, verification queues and supplier flows from one control center.")}
             </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button type="button" onClick={onStartReport} className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-[#0E4FAF] shadow-sm transition hover:translate-y-[-1px]">
+                {t(locale, "Ücretsiz Başla", "Start Free")}
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  document.getElementById("quote-request-section")?.scrollIntoView({ behavior: "smooth", block: "start" })
+                }
+                className="rounded-2xl border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+              >
+                {t(locale, "Teklif Al", "Request a Quote")}
+              </button>
+            </div>
             {!hasLiveShipments && !loading ? (
               <div className="mt-4 inline-flex rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white/85">
-                İlk canlı kayıt geldiğinde dashboard metrikleri otomatik dolacaktır.
+                {t(locale, "İlk canlı kayıt geldiğinde dashboard metrikleri otomatik dolacaktır.", "Dashboard metrics will auto-populate when the first live record arrives.")}
               </div>
             ) : null}
           </div>
@@ -74,6 +109,95 @@ function DashboardHome({ trendData, shipments, loading, error, workspaceAccess, 
               <div className="mt-2 text-sm text-white/75">
                 {t(locale, "Aktif seviye", "Current level")}: {(workspaceAccess?.active_plan || "growth").toUpperCase()}
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="quote-request-section"
+        className="panel overflow-hidden border border-[#0E4FAF]/10 bg-[linear-gradient(180deg,#ffffff_0%,#f5f8ff_100%)] p-6"
+      >
+        <div className="grid gap-6 xl:grid-cols-[1fr_1.1fr]">
+          <div>
+            <div className="text-sm font-semibold text-[#0E4FAF]">
+              {t(locale, "Kurumsal Paketler", "Enterprise Plans")}
+            </div>
+            <h3 className="mt-2 text-3xl font-extrabold text-ink">
+              {t(locale, "Yükseltmek için teklif isteyin", "Request a quote to upgrade")}
+            </h3>
+            <p className="mt-3 max-w-xl text-sm text-slate-600">
+              {t(
+                locale,
+                "Tedarikçi veri toplama, çok kullanıcılı ekip yapısı, doğrulama akışları ve kurumsal onboarding için ekibimiz sizinle doğrudan temas kursun.",
+                "Let our team contact you directly for supplier data collection, multi-user workspaces, verification flows and enterprise onboarding.",
+              )}
+            </p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              {[
+                t(locale, "Kurumsal onboarding", "Enterprise onboarding"),
+                t(locale, "Çoklu kullanıcı ve rol", "Multi-user roles"),
+                t(locale, "Supplier Data Collection", "Supplier Data Collection"),
+              ].map((item) => (
+                <div key={item} className="rounded-2xl bg-white px-4 py-4 text-sm font-semibold text-slate-700 shadow-sm">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+            <div className="text-sm font-semibold text-slate-500">
+              {t(locale, "Teklif Formu", "Quote Request Form")}
+            </div>
+            <div className="mt-1 text-xl font-bold text-ink">
+              {t(locale, "Kurumsal satış ekibine ulaşın", "Reach the enterprise sales team")}
+            </div>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <input
+                className="field"
+                value={quoteForm.name}
+                onChange={(event) => handleQuoteChange("name", event.target.value)}
+                placeholder={t(locale, "Ad Soyad", "Full Name")}
+              />
+              <input
+                className="field"
+                value={quoteForm.company}
+                onChange={(event) => handleQuoteChange("company", event.target.value)}
+                placeholder={t(locale, "Firma", "Company")}
+              />
+              <input
+                className="field sm:col-span-2"
+                value={quoteForm.email}
+                onChange={(event) => handleQuoteChange("email", event.target.value)}
+                placeholder={t(locale, "Kurumsal E-posta", "Business Email")}
+              />
+              <textarea
+                className="field min-h-[128px] resize-y sm:col-span-2"
+                value={quoteForm.message}
+                onChange={(event) => handleQuoteChange("message", event.target.value)}
+                placeholder={t(
+                  locale,
+                  "Aylık rapor hacmi, ekip büyüklüğü veya tedarikçi akışı ihtiyacınızı kısaca yazın.",
+                  "Briefly describe your monthly report volume, team size or supplier workflow needs.",
+                )}
+              />
+            </div>
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-slate-500">
+                {t(
+                  locale,
+                  "Formu gönderdiğinizde teklif talebiniz e-posta olarak satış kanalına düşer.",
+                  "When you submit the form, your quote request is sent by email to the sales channel.",
+                )}
+              </p>
+              <button
+                type="button"
+                onClick={() => onRequestQuote?.(quoteForm)}
+                className="btn-primary whitespace-nowrap"
+              >
+                {t(locale, "Teklif Al", "Request a Quote")}
+              </button>
             </div>
           </div>
         </div>

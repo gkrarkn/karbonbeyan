@@ -20,6 +20,48 @@ FONT_ITALIC = "Arial-Italic"
 FONT_BOLD_ITALIC = "Arial-BoldItalic"
 
 
+def _is_english(record: ShipmentRecord) -> bool:
+    return (record.payload.declaration_assets.output_language or "tr").lower().startswith("en")
+
+
+def _pdf_text(record: ShipmentRecord, tr: str, en: str) -> str:
+    return en if _is_english(record) else tr
+
+
+def _confidence_label(record: ShipmentRecord) -> str:
+    label = record.calculation.confidence_label
+    if not _is_english(record):
+        return label
+    return {
+        "Yüksek Güven": "High Confidence",
+        "Orta Güven": "Medium Confidence",
+        "Düşük Güven": "Low Confidence",
+    }.get(label, label)
+
+
+def _status_label(record: ShipmentRecord) -> str:
+    label = record.calculation.compliance_status_label
+    if not _is_english(record):
+        return label
+    return {
+        "Eksik Veri (Default Kullanıldı)": "Missing Data (Default Used)",
+        "İç İncelemeye Hazır": "Ready for Internal Review",
+        "Resmi Beyana Uygun": "Ready for Official Declaration",
+    }.get(label, label)
+
+
+def _data_quality_summary(record: ShipmentRecord) -> str:
+    if not _is_english(record):
+        return record.calculation.data_quality_summary.summary_text
+
+    level = record.calculation.confidence_level.value
+    return {
+        "high": "Most of the dataset is supported by actual measurements and verified operator data.",
+        "medium": "The report uses a mixed data structure; some fields were completed with default values.",
+        "low": "The report relies mainly on default values; actual data is recommended before formal submission.",
+    }.get(level, record.calculation.data_quality_summary.summary_text)
+
+
 def _ensure_fonts_registered() -> None:
     registered = pdfmetrics.getRegisteredFontNames()
     if FONT_REGULAR not in registered:
@@ -211,7 +253,7 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
         pdf,
         margin,
         y,
-        "Authorised CBAM Declarant",
+        _pdf_text(record, "Yetkili CBAM Beyan Sahibi", "Authorised CBAM Declarant"),
         [
             f"Name: {record.payload.declarant.declarant_name}",
             f"EORI: {record.payload.declarant.declarant_eori}",
@@ -224,7 +266,7 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
         pdf,
         margin + (width - 2 * margin) / 2 + 3 * mm,
         y + 46 * mm,
-        "Import Details",
+        _pdf_text(record, "İthalat Detayları", "Import Details"),
         [
             f"Reference: {record.payload.import_details.shipment_reference}",
             f"Import date: {record.payload.import_details.import_date}",
@@ -239,7 +281,7 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
         pdf,
         margin,
         y,
-        "Producing Installation",
+        _pdf_text(record, "Üretim Tesisi", "Producing Installation"),
         [
             f"Installation: {record.payload.facility.installation_name}",
             f"Installation ID: {record.payload.facility.installation_id}",
@@ -253,31 +295,38 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
         pdf,
         margin,
         y,
-        "Goods and Methodology",
+        _pdf_text(record, "Eşya ve Metodoloji", "Goods and Methodology"),
         [
-            f"Sector: {record.payload.goods.sector.value}",
-            f"Material: {record.payload.goods.material_type.value}",
-            f"Production route: {record.payload.production.production_route}",
-            f"Calculation method applied: {record.calculation.calculation_method_applied}",
-            f"Default value source: {record.calculation.default_value_source or 'n/a'}",
-            f"Compliance status: {record.calculation.compliance_status_label}",
-            f"Confidence level: {record.calculation.confidence_label}",
+            _pdf_text(record, "Sektör", "Sector") + f": {record.payload.goods.sector.value}",
+            _pdf_text(record, "Malzeme", "Material") + f": {record.payload.goods.material_type.value}",
+            _pdf_text(record, "Üretim rotası", "Production route") + f": {record.payload.production.production_route}",
+            _pdf_text(record, "Uygulanan hesaplama yöntemi", "Calculation method applied") + f": {record.calculation.calculation_method_applied}",
+            _pdf_text(record, "Varsayılan değer kaynağı", "Default value source") + f": {record.calculation.default_value_source or 'n/a'}",
+            _pdf_text(record, "Uygunluk durumu", "Compliance status") + f": {_status_label(record)}",
+            _pdf_text(record, "Veri güveni", "Confidence level") + f": {_confidence_label(record)}",
         ],
         width - 2 * margin,
     )
 
     table_y = y
     table_h = 36 * mm
-    _draw_box(pdf, margin, table_y, width - 2 * margin, table_h, "Embedded Emissions Summary")
+    _draw_box(
+        pdf,
+        margin,
+        table_y,
+        width - 2 * margin,
+        table_h,
+        _pdf_text(record, "Gömülü Emisyon Özeti", "Embedded Emissions Summary"),
+    )
     pdf.setFont(FONT_BOLD, 9)
     headers = [
-        "Produced t",
-        "Direct energy",
-        "Direct process",
-        "Indirect",
-        "Precursor",
-        "Total",
-        "Specific",
+        _pdf_text(record, "Üretilen ton", "Produced t"),
+        _pdf_text(record, "Doğrudan enerji", "Direct energy"),
+        _pdf_text(record, "Doğrudan proses", "Direct process"),
+        _pdf_text(record, "Dolaylı", "Indirect"),
+        _pdf_text(record, "Prekürsör", "Precursor"),
+        _pdf_text(record, "Toplam", "Total"),
+        _pdf_text(record, "Özgül", "Specific"),
     ]
     col_x = [margin + 3 * mm, margin + 28 * mm, margin + 54 * mm, margin + 82 * mm, margin + 104 * mm, margin + 127 * mm, margin + 149 * mm]
     for idx, header in enumerate(headers):
@@ -298,7 +347,8 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
     pdf.drawString(
         margin + 3 * mm,
         table_y - 27 * mm,
-        f"Carbon price paid in origin: EUR {record.payload.carbon_price.carbon_price_paid_eur:.2f}",
+        _pdf_text(record, "Menşede ödenen karbon fiyatı", "Carbon price paid in origin")
+        + f": EUR {record.payload.carbon_price.carbon_price_paid_eur:.2f}",
     )
     y = table_y - table_h - 4 * mm
 
@@ -306,14 +356,14 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
         pdf,
         margin,
         y,
-        "Veri Kalitesi Özeti",
+        _pdf_text(record, "Veri Kalitesi Özeti", "Data Quality Summary"),
         [
-            f"Confidence level: {record.calculation.confidence_label}",
-            f"Actual fields: {record.calculation.data_quality_summary.actual_fields_count}",
-            f"Default fields: {record.calculation.data_quality_summary.default_fields_count}",
-            f"Actual share: %{record.calculation.data_quality_summary.actual_share * 100:.0f}",
-            f"Default share: %{record.calculation.data_quality_summary.default_share * 100:.0f}",
-            f"Note: {record.calculation.data_quality_summary.summary_text}",
+            _pdf_text(record, "Veri güveni", "Confidence level") + f": {_confidence_label(record)}",
+            _pdf_text(record, "Actual alanlar", "Actual fields") + f": {record.calculation.data_quality_summary.actual_fields_count}",
+            _pdf_text(record, "Default alanlar", "Default fields") + f": {record.calculation.data_quality_summary.default_fields_count}",
+            _pdf_text(record, "Actual payı", "Actual share") + f": %{record.calculation.data_quality_summary.actual_share * 100:.0f}",
+            _pdf_text(record, "Default payı", "Default share") + f": %{record.calculation.data_quality_summary.default_share * 100:.0f}",
+            _pdf_text(record, "Not", "Note") + f": {_data_quality_summary(record)}",
         ],
         width - 2 * margin,
     )
@@ -324,18 +374,18 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
         pdf,
         margin,
         y,
-        "Verification and Evidence",
+        _pdf_text(record, "Doğrulama ve Kanıtlar", "Verification and Evidence"),
         [
-            f"Status: {record.payload.verification.verification_status.value}",
-            f"Verifier: {record.payload.verification.verifier_name or 'Pending'}",
-            f"Accreditation no: {record.payload.verification.verifier_accreditation_number or 'Pending'}",
-            f"Monitoring plan: {record.payload.methodology.monitoring_plan_reference or 'Not provided'}",
+            _pdf_text(record, "Durum", "Status") + f": {record.payload.verification.verification_status.value}",
+            _pdf_text(record, "Doğrulayıcı", "Verifier") + f": {record.payload.verification.verifier_name or _pdf_text(record, 'Bekliyor', 'Pending')}",
+            _pdf_text(record, "Akreditasyon no", "Accreditation no") + f": {record.payload.verification.verifier_accreditation_number or _pdf_text(record, 'Bekliyor', 'Pending')}",
+            _pdf_text(record, "İzleme planı", "Monitoring plan") + f": {record.payload.methodology.monitoring_plan_reference or _pdf_text(record, 'Sunulmadı', 'Not provided')}",
         ],
         left_w,
     )
     signature_x = margin + left_w + 4 * mm
     signature_h = 38 * mm
-    _draw_box(pdf, signature_x, y, right_w, signature_h, "Stamp / Signature")
+    _draw_box(pdf, signature_x, y, right_w, signature_h, _pdf_text(record, "Kaşe / İmza", "Stamp / Signature"))
     pdf.setFillColor(colors.black)
     pdf.setFont(FONT_REGULAR, 9)
     pdf.drawString(
@@ -348,11 +398,19 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
         y - 19 * mm,
         f"Title: {record.payload.declaration_assets.signatory_title or '________________'}",
     )
-    pdf.drawString(signature_x + 7 * mm, y - 26 * mm, "Date / Stamp: __________________")
+    pdf.drawString(
+        signature_x + 7 * mm,
+        y - 26 * mm,
+        _pdf_text(record, "Tarih / Kaşe", "Date / Stamp") + ": __________________",
+    )
     pdf.setFillColor(colors.black)
     _draw_wrapped_text(
         pdf,
-        "E-imza ile imzalanabilir veya ıslak imza/kaşe yapılarak taranabilir.",
+        _pdf_text(
+            record,
+            "E-imza ile imzalanabilir veya ıslak imza/kaşe yapılarak taranabilir.",
+            "This document can be signed with an e-signature or signed/stamped physically and scanned.",
+        ),
         signature_x + 7 * mm,
         y - 32 * mm,
         right_w - 14 * mm,
@@ -366,7 +424,11 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
     pdf.setFont(FONT_ITALIC, 8)
     note_y = _draw_wrapped_text(
         pdf,
-        "Bu rapor, KarbonBeyan yazılımı tarafından AB 2023/956 sayılı yönetmeliğine uygun metodolojiler kullanılarak hazırlanmış bir ön-beyan özetidir. Girilen verilerin doğruluğu ve resmi gümrük beyan sorumluluğu kullanıcıya aittir.",
+        _pdf_text(
+            record,
+            "Bu rapor, KarbonBeyan yazılımı tarafından AB 2023/956 sayılı yönetmeliğine uygun metodolojiler kullanılarak hazırlanmış bir ön-beyan özetidir. Girilen verilerin doğruluğu ve resmi gümrük beyan sorumluluğu kullanıcıya aittir.",
+            "This report is a pre-declaration summary prepared by KarbonBeyan using methodologies aligned with EU Regulation 2023/956. The accuracy of the entered data and the responsibility for any formal customs declaration remain with the user.",
+        ),
         margin,
         note_y,
         width - 2 * margin,

@@ -465,6 +465,23 @@ function App() {
     }));
   }, [shipments]);
 
+  const handleLogin = useCallback(() => {
+    setActiveView("dashboard");
+  }, []);
+
+  const handleRequestQuote = useCallback((payload = {}) => {
+    const subject = encodeURIComponent("KarbonBeyan Kurumsal Teklif Talebi");
+    const body = encodeURIComponent(
+      [
+        `Ad Soyad: ${payload.name || "-"}`,
+        `Firma: ${payload.company || "-"}`,
+        `E-posta: ${payload.email || "-"}`,
+        `Talep: ${payload.message || "Kurumsal paket ve yükseltme görüşmesi talep ediyorum."}`,
+      ].join("\n"),
+    );
+    window.location.href = `mailto:gokerarkun@icloud.com?subject=${subject}&body=${body}`;
+  }, []);
+
   const renderView = () => {
     switch (activeView) {
       case "yeni-rapor":
@@ -491,6 +508,8 @@ function App() {
             error={shipmentsError}
             workspaceAccess={planCatalog?.current_access || null}
             locale={locale}
+            onStartReport={() => setActiveView("yeni-rapor")}
+            onRequestQuote={handleRequestQuote}
           />
         );
     }
@@ -510,6 +529,7 @@ function App() {
           <Topbar
             activeView={activeView}
             onStartReport={() => setActiveView("yeni-rapor")}
+            onLogin={handleLogin}
             workspaceAccess={planCatalog?.current_access || null}
             locale={locale}
             onLocaleChange={setLocale}

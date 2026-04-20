@@ -6,7 +6,8 @@
     "notes": [
       "Primary legal basis: Commission Implementing Regulation (EU) 2025/2621.",
       "This file is a curated subset for MVP development, focused on Turkish iron-steel and aluminum flows.",
-      "Where direct extraction from the official annex could not be automated in this workspace, a small number of values were manually curated from regulation-linked market summaries and flagged below."
+      "Values were cross-checked against the official Commission Excel workbook for 2026 default values.",
+      "Grouped CN rows such as 7208 and 7601 are mapped to supported product codes in the product wizard and explicitly documented below."
     ],
     "sources": [
       {
@@ -40,8 +41,8 @@
       "specific_indirect_emissions_tco2_per_ton": 0.0,
       "specific_total_emissions_tco2_per_ton": 2.540638498,
       "value_year": 2026,
-      "source_quality": "manual_curated_from_regulation-linked_summary",
-      "source_note": "Turkey semi-finished slab value reflected in OPIS summary of the adopted CBAM default tables."
+      "source_quality": "official_excel_exact_row",
+      "source_note": "Official Türkiye sheet, exact CN row 7207 12 10. 2026 value including the 10% mark-up."
     },
     {
       "sector": "iron_steel",
@@ -54,8 +55,8 @@
       "specific_indirect_emissions_tco2_per_ton": 0.0,
       "specific_total_emissions_tco2_per_ton": 2.670262911,
       "value_year": 2026,
-      "source_quality": "manual_curated_from_regulation-linked_summary",
-      "source_note": "Turkey HRC / heavy plate value reflected in OPIS summary of the adopted CBAM default tables."
+      "source_quality": "official_excel_group_mapping",
+      "source_note": "Official Türkiye sheet, mapped from grouped CN row 7208. 2026 value including the 10% mark-up."
     },
     {
       "sector": "iron_steel",
@@ -68,8 +69,8 @@
       "specific_indirect_emissions_tco2_per_ton": 0.0,
       "specific_total_emissions_tco2_per_ton": 2.670262911,
       "value_year": 2026,
-      "source_quality": "proxy_mapping_with_documented_assumption",
-      "source_note": "Mapped to the same 7208 hot-rolled coil grouping used in market summaries. Keep under review against the full official annex."
+      "source_quality": "official_excel_group_mapping",
+      "source_note": "Official Türkiye sheet, mapped from grouped CN row 7208. 2026 value including the 10% mark-up."
     },
     {
       "sector": "aluminum",
@@ -77,13 +78,13 @@
       "material_type": "primary_aluminum",
       "origin_country": "ANY",
       "production_route": "primary_aluminium",
-      "default_benchmark_tco2_per_ton": 1.464,
-      "specific_direct_emissions_tco2_per_ton": 1.464,
+      "default_benchmark_tco2_per_ton": 2.20264371,
+      "specific_direct_emissions_tco2_per_ton": 2.422908081,
       "specific_indirect_emissions_tco2_per_ton": 0.0,
-      "specific_total_emissions_tco2_per_ton": 1.464,
+      "specific_total_emissions_tco2_per_ton": 2.422908081,
       "value_year": 2026,
-      "source_quality": "manual_curated_from_regulation-linked_summary",
-      "source_note": "Primary aluminum value reflected in S&P Global summary discussing the adopted 2026 CBAM values."
+      "source_quality": "official_excel_group_mapping",
+      "source_note": "Official '_Other Countries and Territories' sheet, mapped from grouped CN row 7601. 2026 value including the 10% mark-up."
     },
     {
       "sector": "aluminum",
@@ -91,13 +92,13 @@
       "material_type": "secondary_aluminum",
       "origin_country": "ANY",
       "production_route": "secondary_aluminium",
-      "default_benchmark_tco2_per_ton": 0.139,
-      "specific_direct_emissions_tco2_per_ton": 0.139,
+      "default_benchmark_tco2_per_ton": 2.20264371,
+      "specific_direct_emissions_tco2_per_ton": 2.422908081,
       "specific_indirect_emissions_tco2_per_ton": 0.0,
-      "specific_total_emissions_tco2_per_ton": 0.139,
+      "specific_total_emissions_tco2_per_ton": 2.422908081,
       "value_year": 2026,
-      "source_quality": "manual_curated_from_regulation-linked_summary",
-      "source_note": "Secondary aluminum value reflected in S&P Global summary discussing the adopted 2026 CBAM values."
+      "source_quality": "official_excel_group_mapping",
+      "source_note": "Official '_Other Countries and Territories' sheet, mapped from grouped CN row 7601. 2026 value including the 10% mark-up; the official table does not distinguish 76011000 and 76012000 at this level."
     }
   ]
 }

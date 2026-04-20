@@ -1,7 +1,14 @@
 import BrandLogo from "../brand/BrandLogo";
 import { locales, t, translateRole } from "../../lib/i18n";
 
-function Topbar({ activeView, onStartReport, workspaceAccess, locale, onLocaleChange }) {
+function Topbar({
+  activeView,
+  onStartReport,
+  onLogin,
+  workspaceAccess,
+  locale,
+  onLocaleChange,
+}) {
   const titleMap = {
     dashboard: t(locale, "CBAM Uyum Sürecinizi Yönetin ve Riskinizi Görün", "Manage Your CBAM Process and See Your Risk"),
     "yeni-rapor": t(locale, "Uyum Akışı", "Workflow"),
@@ -54,8 +61,11 @@ function Topbar({ activeView, onStartReport, workspaceAccess, locale, onLocaleCh
             </button>
           ))}
         </div>
+        <button type="button" onClick={onLogin} className="btn-secondary">
+          {t(locale, "Giriş Yap", "Login")}
+        </button>
         <button type="button" onClick={onStartReport} className="btn-primary">
-          {t(locale, "Uyum Sürecini Yönet", "Manage Workflow")}
+          {t(locale, "Ücretsiz Başla", "Start Free")}
         </button>
         <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-clay text-sm font-bold text-white">

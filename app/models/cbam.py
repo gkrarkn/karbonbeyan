@@ -233,6 +233,7 @@ class DeclarationAssets(BaseModel):
     logo_path: str | None = None
     signatory_name: str | None = None
     signatory_title: str | None = None
+    output_language: str = "tr"
     show_stamp_box: bool = True
 
 
