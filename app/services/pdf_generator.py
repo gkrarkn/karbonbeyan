@@ -286,6 +286,11 @@ def _draw_key_value_block(
     return y - height - 4 * mm
 
 
+def _estimate_key_value_block_height(lines: list[str]) -> float:
+    line_height = 5.5 * mm
+    return max(18 * mm, (len(lines) + 2) * line_height)
+
+
 def _star_points(
     cx: float, cy: float, outer_radius: float, inner_radius: float, spikes: int = 5
 ) -> list[tuple[float, float]]:
@@ -356,9 +361,14 @@ def _draw_brand_logo(
     pdf.setFillColor(colors.white)
     pdf.setFont(FONT_BOLD, 15)
     pdf.drawString(text_x, y - 10 * mm, "KarbonBeyan")
-    pdf.setFont(FONT_REGULAR, 7.5)
+    subtitle = "CBAM compliance workflow platform"
+    subtitle_font_size = 6.0
+    max_subtitle_width = w - (text_x - x) - 3 * mm
+    while subtitle_font_size > 4.8 and stringWidth(subtitle, FONT_REGULAR, subtitle_font_size) > max_subtitle_width:
+        subtitle_font_size -= 0.2
+    pdf.setFont(FONT_REGULAR, subtitle_font_size)
     pdf.setFillColor(colors.Color(1, 1, 1, alpha=0.78))
-    pdf.drawString(text_x, y - 15.2 * mm, "CBAM compliance workflow platform")
+    pdf.drawString(text_x - 1 * mm, y - 15.2 * mm, subtitle)
 
 
 def _draw_wrapped_text(
@@ -396,6 +406,32 @@ def _draw_wrapped_text(
     return current_y
 
 
+def _measure_wrapped_text_height(
+    text: str,
+    max_width: float,
+    font_name: str = FONT_REGULAR,
+    font_size: float = 8,
+    line_gap: float = 3.8 * mm,
+) -> float:
+    words = text.split()
+    lines = 0
+    current_line = ""
+
+    for word in words:
+        candidate = word if not current_line else f"{current_line} {word}"
+        if stringWidth(candidate, font_name, font_size) <= max_width:
+            current_line = candidate
+        else:
+            if current_line:
+                lines += 1
+            current_line = word
+
+    if current_line:
+        lines += 1
+
+    return max(lines, 1) * line_gap
+
+
 def _draw_status_pill(
     pdf: canvas.Canvas,
     x: float,
@@ -423,17 +459,17 @@ def _draw_quality_row(
     body: str,
     fill_color,
     text_color,
-    height: float = 10.5 * mm,
+    height: float = 8.8 * mm,
 ) -> float:
     pdf.setFillColor(fill_color)
     pdf.setStrokeColor(fill_color)
     pdf.roundRect(x, y - height, width, height, 2.3 * mm, stroke=0, fill=1)
     pdf.setFillColor(text_color)
-    pdf.setFont(FONT_BOLD, 8.6)
-    pdf.drawString(x + 3 * mm, y - 4.3 * mm, title)
-    pdf.setFont(FONT_REGULAR, 8)
-    pdf.drawString(x + 3 * mm, y - 8.1 * mm, body[:120])
-    return y - height - 2 * mm
+    pdf.setFont(FONT_BOLD, 8.0)
+    pdf.drawString(x + 2.8 * mm, y - 3.8 * mm, title)
+    pdf.setFont(FONT_REGULAR, 7.1)
+    pdf.drawString(x + 2.8 * mm, y - 6.7 * mm, body[:104])
+    return y - height - 1.4 * mm
 
 
 def _draw_action_quality_panel(
@@ -443,7 +479,7 @@ def _draw_action_quality_panel(
     y: float,
     width: float,
 ) -> float:
-    panel_height = 42 * mm
+    panel_height = 34 * mm
     _draw_box(pdf, x, y, width, panel_height, _pdf_text(record, "Karar ve Risk Özeti", "Decision and Risk Summary"))
 
     confidence_level = record.calculation.confidence_level.value
@@ -465,7 +501,7 @@ def _draw_action_quality_panel(
     verified = record.payload.verification.verification_status == "verified"
     verification_fill, verification_text = (GREEN_BG, GREEN_TEXT) if verified else (RED_BG, RED_TEXT)
 
-    current_y = y - 9 * mm
+    current_y = y - 7.5 * mm
     current_y = _draw_quality_row(
         pdf,
         x + 3 * mm,
@@ -501,6 +537,38 @@ def _draw_action_quality_panel(
     return y - panel_height - 4 * mm
 
 
+def _draw_page_header(
+    pdf: canvas.Canvas,
+    record: ShipmentRecord,
+    width: float,
+    height: float,
+    margin: float,
+    page_title: str | None = None,
+) -> float:
+    y = height - 18 * mm
+    pdf.setStrokeColor(colors.HexColor("#1F2937"))
+    pdf.setFillColor(colors.black)
+    pdf.setLineWidth(1)
+    pdf.line(margin, y - 4 * mm, width - margin, y - 4 * mm)
+
+    logo_w = 62 * mm
+    logo_h = 19 * mm
+    _draw_brand_logo(pdf, margin, y, logo_w, logo_h)
+
+    title = page_title or "KarbonBeyan | CBAM Declaration Draft"
+    pdf.setFont(FONT_BOLD, 16)
+    pdf.drawRightString(width - margin, y - 4 * mm, title)
+    pdf.setFillColor(colors.black)
+    pdf.setFont(FONT_REGULAR, 9)
+    pdf.drawRightString(
+        width - margin,
+        y - 10 * mm,
+        f"Definitive regime reference year: {record.payload.reporting.declaration_year}",
+    )
+    pdf.drawRightString(width - margin, y - 14.5 * mm, f"Record ID: {record.shipment_id}")
+    return y - 23 * mm
+
+
 def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "generated") -> str:
     _ensure_fonts_registered()
     Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -509,28 +577,7 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
     pdf = canvas.Canvas(str(pdf_path), pagesize=A4)
     width, height = A4
     margin = 15 * mm
-    y = height - 18 * mm
-
-    pdf.setStrokeColor(colors.HexColor("#1F2937"))
-    pdf.setFillColor(colors.black)
-    pdf.setLineWidth(1)
-    pdf.line(margin, y - 4 * mm, width - margin, y - 4 * mm)
-
-    logo_w = 62 * mm
-    logo_h = 20 * mm
-    _draw_brand_logo(pdf, margin, y, logo_w, logo_h)
-
-    pdf.setFont(FONT_BOLD, 16)
-    pdf.drawRightString(width - margin, y - 4 * mm, "KarbonBeyan | CBAM Declaration Draft")
-    pdf.setFillColor(colors.black)
-    pdf.setFont(FONT_REGULAR, 9)
-    pdf.drawRightString(
-        width - margin,
-        y - 10 * mm,
-        f"Definitive regime reference year: {record.payload.reporting.declaration_year}",
-    )
-    pdf.drawRightString(width - margin, y - 15 * mm, f"Record ID: {record.shipment_id}")
-    y -= 26 * mm
+    y = _draw_page_header(pdf, record, width, height, margin)
 
     y = _draw_key_value_block(
         pdf,
@@ -559,7 +606,7 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
         (width - 2 * margin) / 2 - 3 * mm,
     )
 
-    y -= 2 * mm
+    y -= 1 * mm
     y = _draw_key_value_block(
         pdf,
         margin,
@@ -592,7 +639,7 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
     )
 
     table_y = y
-    table_h = 36 * mm
+    table_h = 31 * mm
     _draw_box(
         pdf,
         margin,
@@ -601,7 +648,7 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
         table_h,
         _pdf_text(record, "Gömülü Emisyon Özeti", "Embedded Emissions Summary"),
     )
-    pdf.setFont(FONT_BOLD, 9)
+    pdf.setFont(FONT_BOLD, 8.0)
     headers = [
         _pdf_text(record, "Üretilen ton", "Produced t"),
         _pdf_text(record, "Doğrudan enerji", "Direct energy"),
@@ -615,7 +662,7 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
     for idx, header in enumerate(headers):
         pdf.drawString(col_x[idx], table_y - 10 * mm, header)
     pdf.setFillColor(colors.black)
-    pdf.setFont(FONT_REGULAR, 9)
+    pdf.setFont(FONT_REGULAR, 8.0)
     values = [
         f"{record.payload.production.produced_quantity_tons:.3f}",
         f"{record.calculation.direct_energy_emissions_tco2:.3f}",
@@ -626,10 +673,10 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
         f"{record.calculation.specific_embedded_emissions_tco2_per_ton:.6f}",
     ]
     for idx, value in enumerate(values):
-        pdf.drawString(col_x[idx], table_y - 18 * mm, value)
+        pdf.drawString(col_x[idx], table_y - 16 * mm, value)
     pdf.drawString(
         margin + 3 * mm,
-        table_y - 27 * mm,
+        table_y - 23.5 * mm,
         _pdf_text(record, "Menşede ödenen karbon fiyatı", "Carbon price paid in origin")
         + f": EUR {record.payload.carbon_price.carbon_price_paid_eur:.2f}",
     )
@@ -637,10 +684,11 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
 
     y = _draw_action_quality_panel(pdf, record, margin, y, width - 2 * margin)
 
+    next_action_items = _next_actions(record)
     next_action_lines = [
-        f"1. {_next_actions(record)[0]}",
-        f"2. {_next_actions(record)[1]}",
-        f"3. {_next_actions(record)[2]}",
+        f"1. {next_action_items[0]}",
+        f"2. {next_action_items[1]}",
+        f"3. {next_action_items[2]}",
     ]
     y = _draw_key_value_block(
         pdf,
@@ -653,78 +701,121 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
 
     left_w = (width - 2 * margin) * 0.5
     right_w = (width - 2 * margin) - left_w - 4 * mm
+    verification_lines = [
+        _pdf_text(record, "Durum", "Status") + f": {_verification_status_label(record)}",
+        _pdf_text(record, "Doğrulayıcı", "Verifier") + f": {record.payload.verification.verifier_name or _pdf_text(record, 'Bekliyor', 'Pending')}",
+        _pdf_text(record, "Akreditasyon no", "Accreditation no") + f": {record.payload.verification.verifier_accreditation_number or _pdf_text(record, 'Bekliyor', 'Pending')}",
+        _pdf_text(record, "İzleme planı", "Monitoring plan") + f": {record.payload.methodology.monitoring_plan_reference or _pdf_text(record, 'Sunulmadı', 'Not provided')}",
+    ]
+    signature_x = margin + left_w + 4 * mm
+    signature_h = 31 * mm
+    signature_note_text = _pdf_text(
+        record,
+        "E-imza ile imzalanabilir veya ıslak imza/kaşe yapılarak taranabilir.",
+        "This document can be signed with an e-signature or signed/stamped physically and scanned.",
+    )
+    disclaimer_text = _pdf_text(
+        record,
+        "Bu rapor tahmini verilere dayanabilir. Resmi beyan öncesinde actual üretici verisi ve gerekli doğrulama tamamlanmalıdır.",
+        "This report may rely on estimated values. Actual producer data and required verification must be completed before formal submission.",
+    )
+    verification_height = _estimate_key_value_block_height(verification_lines)
+    signature_note_height = _measure_wrapped_text_height(
+        signature_note_text,
+        right_w - 14 * mm,
+        font_name=FONT_ITALIC,
+        font_size=6.7,
+        line_gap=2.7 * mm,
+    )
+    disclaimer_height = _measure_wrapped_text_height(
+        disclaimer_text,
+        width - 2 * margin,
+        font_name=FONT_ITALIC,
+        font_size=6.7,
+        line_gap=2.6 * mm,
+    )
+    bottom_content_height = (
+        max(verification_height, signature_h)
+        + 2 * mm
+        + disclaimer_height
+        + 4.5 * mm
+    )
+    if y - bottom_content_height < margin:
+        pdf.showPage()
+        y = _draw_page_header(
+            pdf,
+            record,
+            width,
+            height,
+            margin,
+            _pdf_text(
+                record,
+                "KarbonBeyan | Doğrulama ve Sonlandırma",
+                "KarbonBeyan | Verification and Finalisation",
+            ),
+        )
+
     y_left = _draw_key_value_block(
         pdf,
         margin,
         y,
         _pdf_text(record, "Doğrulama ve Kanıtlar", "Verification and Evidence"),
-        [
-            _pdf_text(record, "Durum", "Status") + f": {_verification_status_label(record)}",
-            _pdf_text(record, "Doğrulayıcı", "Verifier") + f": {record.payload.verification.verifier_name or _pdf_text(record, 'Bekliyor', 'Pending')}",
-            _pdf_text(record, "Akreditasyon no", "Accreditation no") + f": {record.payload.verification.verifier_accreditation_number or _pdf_text(record, 'Bekliyor', 'Pending')}",
-            _pdf_text(record, "İzleme planı", "Monitoring plan") + f": {record.payload.methodology.monitoring_plan_reference or _pdf_text(record, 'Sunulmadı', 'Not provided')}",
-        ],
+        verification_lines,
         left_w,
     )
-    signature_x = margin + left_w + 4 * mm
-    signature_h = 38 * mm
     _draw_box(pdf, signature_x, y, right_w, signature_h, _pdf_text(record, "Kaşe / İmza", "Stamp / Signature"))
     pdf.setFillColor(colors.black)
     pdf.setFont(FONT_REGULAR, 9)
     pdf.drawString(
         signature_x + 7 * mm,
-        y - 12 * mm,
+        y - 10.5 * mm,
         f"Name: {record.payload.declaration_assets.signatory_name or '________________'}",
     )
     pdf.drawString(
         signature_x + 7 * mm,
-        y - 19 * mm,
+        y - 16.5 * mm,
         f"Title: {record.payload.declaration_assets.signatory_title or '________________'}",
     )
     pdf.drawString(
         signature_x + 7 * mm,
-        y - 26 * mm,
+        y - 22.5 * mm,
         _pdf_text(record, "Tarih / Kaşe", "Date / Stamp") + ": __________________",
     )
     pdf.setFillColor(colors.black)
     _draw_wrapped_text(
         pdf,
-        _pdf_text(
-            record,
-            "E-imza ile imzalanabilir veya ıslak imza/kaşe yapılarak taranabilir.",
-            "This document can be signed with an e-signature or signed/stamped physically and scanned.",
-        ),
+        signature_note_text,
         signature_x + 7 * mm,
-        y - 32 * mm,
+        y - 27.0 * mm,
         right_w - 14 * mm,
         font_name=FONT_ITALIC,
-        font_size=7.5,
-        line_gap=3.3 * mm,
+        font_size=6.7,
+        line_gap=2.7 * mm,
     )
 
-    note_y = min(y_left, y - signature_h) - 3 * mm
+    note_y = min(y_left, y - signature_h) - 2 * mm
     pdf.setFillColor(colors.black)
     pdf.setFont(FONT_ITALIC, 8)
     note_y = _draw_wrapped_text(
         pdf,
-        _pdf_text(
-            record,
-            "Bu rapor tahmini verilere dayanabilir. Resmi beyan öncesinde actual üretici verisi ve gerekli doğrulama tamamlanmalıdır.",
-            "This report may rely on estimated values. Actual producer data and required verification must be completed before formal submission.",
-        ),
+        disclaimer_text,
         margin,
         note_y,
         width - 2 * margin,
         font_name=FONT_ITALIC,
-        font_size=7.5,
-        line_gap=3.2 * mm,
+        font_size=6.7,
+        line_gap=2.6 * mm,
     )
     pdf.setFillColor(colors.black)
-    pdf.setFont(FONT_ITALIC, 7.5)
+    pdf.setFont(FONT_ITALIC, 6.7)
     pdf.drawString(
         margin,
         note_y - 1.5 * mm,
-        "KarbonBeyan draft output prepared for workflow support and internal review.",
+        _pdf_text(
+            record,
+            "KarbonBeyan taslak çıktısı iç inceleme ve iş akışı desteği için hazırlanmıştır.",
+            "KarbonBeyan draft output prepared for workflow support and internal review.",
+        ),
     )
 
     pdf.showPage()
