@@ -3,6 +3,14 @@ export const locales = {
   en: "EN",
 };
 
+export function resolveLocale(locale) {
+  if (typeof locale !== "string") {
+    return "tr";
+  }
+
+  return locale.toLowerCase().startsWith("en") ? "en" : "tr";
+}
+
 export function getMenuItems(locale) {
   if (locale === "en") {
     return [
@@ -24,7 +32,7 @@ export function getMenuItems(locale) {
 }
 
 export function t(locale, tr, en) {
-  return locale === "en" ? en : tr;
+  return resolveLocale(locale) === "en" ? en : tr;
 }
 
 const statusMap = {
@@ -54,13 +62,13 @@ const roleMap = {
 };
 
 export function translateComplianceStatus(locale, label) {
-  return locale === "en" ? statusMap[label] || label : label;
+  return resolveLocale(locale) === "en" ? statusMap[label] || label : label;
 }
 
 export function translateConfidence(locale, label) {
-  return locale === "en" ? confidenceMap[label] || label : label;
+  return resolveLocale(locale) === "en" ? confidenceMap[label] || label : label;
 }
 
 export function translateRole(locale, label) {
-  return locale === "en" ? roleMap[label] || label : label;
+  return resolveLocale(locale) === "en" ? roleMap[label] || label : label;
 }
