@@ -8,11 +8,23 @@ def _split_origins(value: str) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
+def _normalize_database_url(value: str) -> str:
+    if value.startswith("postgresql+psycopg://") or value.startswith("sqlite"):
+        return value
+    if value.startswith("postgres://"):
+        return value.replace("postgres://", "postgresql+psycopg://", 1)
+    if value.startswith("postgresql://"):
+        return value.replace("postgresql://", "postgresql+psycopg://", 1)
+    return value
+
+
 @dataclass(frozen=True)
 class Settings:
     app_name: str = os.getenv("APP_NAME", "KarbonBeyan API")
     app_env: str = os.getenv("APP_ENV", "development")
-    database_url: str = os.getenv("DATABASE_URL", "sqlite:///./karbonbeyan.db")
+    database_url: str = _normalize_database_url(
+        os.getenv("DATABASE_URL", "sqlite:///./karbonbeyan.db")
+    )
     allowed_origins: list[str] = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
