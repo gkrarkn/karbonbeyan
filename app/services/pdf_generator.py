@@ -161,7 +161,7 @@ def _confidence_message(record: ShipmentRecord) -> str:
             "low": "This calculation is based on estimated data and is not sufficient for official CBAM submission.",
         }[level]
     return {
-        "high": "Bu kayıt güçlü actual kanıtla destekleniyor ve resmi beyana yakındır.",
+        "high": "Bu kayıt güçlü gerçek veri kanıtıyla destekleniyor ve resmi beyana yakındır.",
         "medium": "Bu kayıt resmi gönderim öncesi iç inceleme gerektirir.",
         "low": "Bu hesaplama tahmini verilere dayanıyor ve resmi beyan için yeterli değildir.",
     }[level]
@@ -175,7 +175,7 @@ def _next_actions(record: ShipmentRecord) -> list[str]:
         actions.append(
             "Request actual emissions data from the supplier"
             if is_en
-            else "Üreticiden actual emisyon verisi talep edin"
+            else "Üreticiden gerçek emisyon verisi talep edin"
         )
         actions.append(
             "Reduce reliance on default values before formal declaration"
@@ -647,10 +647,10 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
         top_row_y,
         _pdf_text(record, "İthalat Detayları", "Import Details"),
         [
-            f"Reference: {record.payload.import_details.shipment_reference}",
-            f"Import date: {record.payload.import_details.import_date}",
-            f"Origin: {record.payload.import_details.country_of_origin}",
-            f"CN code: {record.payload.goods.cn_code}",
+            f"{_pdf_text(record, 'Referans', 'Reference')}: {record.payload.import_details.shipment_reference}",
+            f"{_pdf_text(record, 'İthalat tarihi', 'Import date')}: {record.payload.import_details.import_date}",
+            f"{_pdf_text(record, 'Menşe', 'Origin')}: {record.payload.import_details.country_of_origin}",
+            f"{_pdf_text(record, 'CN kodu', 'CN code')}: {record.payload.goods.cn_code}",
         ],
         (width - 2 * margin) / 2 - 3 * mm,
     )
@@ -662,10 +662,10 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
         y,
         _pdf_text(record, "Üretim Tesisi", "Producing Installation"),
         [
-            f"Installation: {record.payload.facility.installation_name}",
-            f"Installation ID: {record.payload.facility.installation_id}",
-            f"Location: {record.payload.facility.city}, {record.payload.facility.country_code}",
-            f"Operator: {record.payload.facility.operator.operator_name}",
+            f"{_pdf_text(record, 'Tesis', 'Installation')}: {record.payload.facility.installation_name}",
+            f"{_pdf_text(record, 'Tesis ID', 'Installation ID')}: {record.payload.facility.installation_id}",
+            f"{_pdf_text(record, 'Konum', 'Location')}: {record.payload.facility.city}, {record.payload.facility.country_code}",
+            f"{_pdf_text(record, 'Operatör', 'Operator')}: {record.payload.facility.operator.operator_name}",
         ],
         width - 2 * margin,
     )
