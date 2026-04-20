@@ -53,6 +53,14 @@ FONT_CANDIDATES = {
     ],
 }
 
+GREEN_BG = colors.HexColor("#E9F7EE")
+GREEN_TEXT = colors.HexColor("#166534")
+YELLOW_BG = colors.HexColor("#FEF3C7")
+YELLOW_TEXT = colors.HexColor("#92400E")
+RED_BG = colors.HexColor("#FEE2E2")
+RED_TEXT = colors.HexColor("#991B1B")
+SLATE_BG = colors.HexColor("#F8FAFC")
+
 
 def _is_english(record: ShipmentRecord) -> bool:
     return (record.payload.declaration_assets.output_language or "tr").lower().startswith("en")
@@ -84,6 +92,21 @@ def _status_label(record: ShipmentRecord) -> str:
     }.get(label, label)
 
 
+def _verification_status_label(record: ShipmentRecord) -> str:
+    value = record.payload.verification.verification_status.value
+    if _is_english(record):
+        return {
+            "pending": "Pending verification",
+            "verified": "Verified",
+            "not_required": "Verification not required",
+        }.get(value, value.title())
+    return {
+        "pending": "Bekliyor",
+        "verified": "Doğrulandı",
+        "not_required": "Doğrulama gerekmiyor",
+    }.get(value, value)
+
+
 def _data_quality_summary(record: ShipmentRecord) -> str:
     if not _is_english(record):
         return record.calculation.data_quality_summary.summary_text
@@ -94,6 +117,54 @@ def _data_quality_summary(record: ShipmentRecord) -> str:
         "medium": "The report uses a mixed data structure; some fields were completed with default values.",
         "low": "This calculation relies on estimated data and is not ready for formal declaration without stronger actual evidence.",
     }.get(level, record.calculation.data_quality_summary.summary_text)
+
+
+def _default_dependency_message(record: ShipmentRecord) -> str:
+    default_share_pct = round(record.calculation.data_quality_summary.default_share * 100)
+    actual_share_pct = round(record.calculation.data_quality_summary.actual_share * 100)
+
+    if _is_english(record):
+        if default_share_pct >= 100:
+            return "Calculation relies entirely on default values (100% default)."
+        if default_share_pct > 0:
+            return f"Calculation relies partly on default values ({default_share_pct}% default / {actual_share_pct}% actual)."
+        return "Calculation is supported by actual producer data."
+
+    if default_share_pct >= 100:
+        return "Hesaplama tamamen tahmini değerlere dayanıyor (%100 default)."
+    if default_share_pct > 0:
+        return f"Hesaplama kısmen tahmini değerlere dayanıyor (%{default_share_pct} default / %{actual_share_pct} actual)."
+    return "Hesaplama actual üretici verisi ile destekleniyor."
+
+
+def _verification_message(record: ShipmentRecord) -> str:
+    verified = record.payload.verification.verification_status == "verified"
+    if _is_english(record):
+        return (
+            "Third-party verification completed; this barrier is closed for formal submission."
+            if verified
+            else "Official CBAM submission cannot be completed without third-party verification."
+        )
+    return (
+        "Bağımsız doğrulama tamamlandı; resmi beyan için bu bariyer kapalı."
+        if verified
+        else "Bağımsız denetim yapılmadan resmi CBAM beyanı verilemez."
+    )
+
+
+def _confidence_message(record: ShipmentRecord) -> str:
+    level = record.calculation.confidence_level.value
+    if _is_english(record):
+        return {
+            "high": "This record is supported by strong actual evidence and is close to formal declaration.",
+            "medium": "This record still needs internal review before formal submission.",
+            "low": "This calculation is based on estimated data and is not sufficient for official CBAM submission.",
+        }[level]
+    return {
+        "high": "Bu kayıt güçlü actual kanıtla destekleniyor ve resmi beyana yakındır.",
+        "medium": "Bu kayıt resmi gönderim öncesi iç inceleme gerektirir.",
+        "low": "Bu hesaplama tahmini verilere dayanıyor ve resmi beyan için yeterli değildir.",
+    }[level]
 
 
 def _next_actions(record: ShipmentRecord) -> list[str]:
@@ -139,12 +210,12 @@ def _next_actions(record: ShipmentRecord) -> list[str]:
             deduped.append(action)
 
     fallback_actions = [
+        "Prepare a monitoring plan before formal submission"
+        if is_en
+        else "Resmi beyan öncesi bir izleme planı hazırlayın",
         "Keep evidence files and declaration data aligned for submission"
         if is_en
         else "Kanıt dosyalarını ve beyan verilerini gönderim için hizalı tutun",
-        "Confirm the installation and operator details before submission"
-        if is_en
-        else "Gönderim öncesi tesis ve operatör bilgilerini teyit edin",
         "Prepare the final declaration package for submission"
         if is_en
         else "Nihai beyan paketini gönderim için hazırlayın",
@@ -325,6 +396,111 @@ def _draw_wrapped_text(
     return current_y
 
 
+def _draw_status_pill(
+    pdf: canvas.Canvas,
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    text: str,
+    fill_color,
+    text_color,
+) -> None:
+    pdf.setFillColor(fill_color)
+    pdf.setStrokeColor(fill_color)
+    pdf.roundRect(x, y - h, w, h, 2.5 * mm, stroke=0, fill=1)
+    pdf.setFillColor(text_color)
+    pdf.setFont(FONT_BOLD, 8.2)
+    pdf.drawString(x + 3 * mm, y - 4.7 * mm, text)
+
+
+def _draw_quality_row(
+    pdf: canvas.Canvas,
+    x: float,
+    y: float,
+    width: float,
+    title: str,
+    body: str,
+    fill_color,
+    text_color,
+    height: float = 10.5 * mm,
+) -> float:
+    pdf.setFillColor(fill_color)
+    pdf.setStrokeColor(fill_color)
+    pdf.roundRect(x, y - height, width, height, 2.3 * mm, stroke=0, fill=1)
+    pdf.setFillColor(text_color)
+    pdf.setFont(FONT_BOLD, 8.6)
+    pdf.drawString(x + 3 * mm, y - 4.3 * mm, title)
+    pdf.setFont(FONT_REGULAR, 8)
+    pdf.drawString(x + 3 * mm, y - 8.1 * mm, body[:120])
+    return y - height - 2 * mm
+
+
+def _draw_action_quality_panel(
+    pdf: canvas.Canvas,
+    record: ShipmentRecord,
+    x: float,
+    y: float,
+    width: float,
+) -> float:
+    panel_height = 42 * mm
+    _draw_box(pdf, x, y, width, panel_height, _pdf_text(record, "Karar ve Risk Özeti", "Decision and Risk Summary"))
+
+    confidence_level = record.calculation.confidence_level.value
+    if confidence_level == "high":
+        confidence_fill, confidence_text = GREEN_BG, GREEN_TEXT
+    elif confidence_level == "medium":
+        confidence_fill, confidence_text = YELLOW_BG, YELLOW_TEXT
+    else:
+        confidence_fill, confidence_text = RED_BG, RED_TEXT
+
+    default_share = record.calculation.data_quality_summary.default_share
+    if default_share == 0:
+        default_fill, default_text = GREEN_BG, GREEN_TEXT
+    elif default_share >= 0.99:
+        default_fill, default_text = YELLOW_BG, YELLOW_TEXT
+    else:
+        default_fill, default_text = YELLOW_BG, YELLOW_TEXT
+
+    verified = record.payload.verification.verification_status == "verified"
+    verification_fill, verification_text = (GREEN_BG, GREEN_TEXT) if verified else (RED_BG, RED_TEXT)
+
+    current_y = y - 9 * mm
+    current_y = _draw_quality_row(
+        pdf,
+        x + 3 * mm,
+        current_y,
+        width - 6 * mm,
+        _pdf_text(record, "Veri güveni", "Confidence level") + f": {_confidence_label(record)}",
+        _confidence_message(record),
+        confidence_fill,
+        confidence_text,
+    )
+    current_y = _draw_quality_row(
+        pdf,
+        x + 3 * mm,
+        current_y,
+        width - 6 * mm,
+        _pdf_text(record, "Default bağımlılığı", "Default reliance"),
+        _default_dependency_message(record),
+        default_fill,
+        default_text,
+    )
+    _draw_quality_row(
+        pdf,
+        x + 3 * mm,
+        current_y,
+        width - 6 * mm,
+        _pdf_text(record, "Doğrulama durumu", "Verification status")
+        + f": {_verification_status_label(record)}",
+        _verification_message(record),
+        verification_fill,
+        verification_text,
+    )
+
+    return y - panel_height - 4 * mm
+
+
 def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "generated") -> str:
     _ensure_fonts_registered()
     Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -459,21 +635,7 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
     )
     y = table_y - table_h - 4 * mm
 
-    y = _draw_key_value_block(
-        pdf,
-        margin,
-        y,
-        _pdf_text(record, "Veri Kalitesi Özeti", "Data Quality Summary"),
-        [
-            _pdf_text(record, "Veri güveni", "Confidence level") + f": {_confidence_label(record)}",
-            _pdf_text(record, "Actual alanlar", "Actual fields") + f": {record.calculation.data_quality_summary.actual_fields_count}",
-            _pdf_text(record, "Default alanlar", "Default fields") + f": {record.calculation.data_quality_summary.default_fields_count}",
-            _pdf_text(record, "Actual payı", "Actual share") + f": %{record.calculation.data_quality_summary.actual_share * 100:.0f}",
-            _pdf_text(record, "Default payı", "Default share") + f": %{record.calculation.data_quality_summary.default_share * 100:.0f}",
-            _pdf_text(record, "Not", "Note") + f": {_data_quality_summary(record)}",
-        ],
-        width - 2 * margin,
-    )
+    y = _draw_action_quality_panel(pdf, record, margin, y, width - 2 * margin)
 
     next_action_lines = [
         f"1. {_next_actions(record)[0]}",
@@ -497,7 +659,7 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
         y,
         _pdf_text(record, "Doğrulama ve Kanıtlar", "Verification and Evidence"),
         [
-            _pdf_text(record, "Durum", "Status") + f": {record.payload.verification.verification_status.value}",
+            _pdf_text(record, "Durum", "Status") + f": {_verification_status_label(record)}",
             _pdf_text(record, "Doğrulayıcı", "Verifier") + f": {record.payload.verification.verifier_name or _pdf_text(record, 'Bekliyor', 'Pending')}",
             _pdf_text(record, "Akreditasyon no", "Accreditation no") + f": {record.payload.verification.verifier_accreditation_number or _pdf_text(record, 'Bekliyor', 'Pending')}",
             _pdf_text(record, "İzleme planı", "Monitoring plan") + f": {record.payload.methodology.monitoring_plan_reference or _pdf_text(record, 'Sunulmadı', 'Not provided')}",
@@ -547,8 +709,8 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
         pdf,
         _pdf_text(
             record,
-            "Bu rapor, KarbonBeyan yazılımı tarafından AB 2023/956 sayılı yönetmeliğine uygun metodolojiler kullanılarak hazırlanmış bir ön-beyan özetidir. Girilen verilerin doğruluğu ve resmi gümrük beyan sorumluluğu kullanıcıya aittir.",
-            "This report is a pre-declaration summary prepared by KarbonBeyan using methodologies aligned with EU Regulation 2023/956. The accuracy of the entered data and the responsibility for any formal customs declaration remain with the user.",
+            "Bu rapor tahmini verilere dayanabilir. Resmi beyan öncesinde actual üretici verisi ve gerekli doğrulama tamamlanmalıdır.",
+            "This report may rely on estimated values. Actual producer data and required verification must be completed before formal submission.",
         ),
         margin,
         note_y,
