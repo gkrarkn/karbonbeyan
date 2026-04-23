@@ -35,7 +35,7 @@ function Topbar({
         <BrandLogo compact locale={locale} />
         <div>
           <div className="text-xs uppercase tracking-[0.24em] text-slate-400">KarbonBeyan Platform</div>
-          <h1 className="text-2xl font-extrabold text-ink">{titleMap[activeView]}</h1>
+          <h1 className="text-lg font-extrabold text-ink">{titleMap[activeView]}</h1>
           {workspaceAccess ? (
             <div className="mt-2 inline-flex items-center rounded-full bg-[#0E4FAF]/8 px-3 py-1 text-xs font-semibold text-[#0E4FAF]">
               {workspaceAccess.trial_status === "active"
