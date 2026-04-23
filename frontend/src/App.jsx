@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import AuthModal from "./components/auth/AuthModal";
 import DashboardHome from "./components/DashboardHome";
 import Sidebar from "./components/layout/Sidebar";
 import Topbar from "./components/layout/Topbar";
@@ -400,6 +401,9 @@ function SettingsView({ planCatalog, loading, error, locale }) {
 function App() {
   const [activeView, setActiveView] = useState("dashboard");
   const [locale, setLocale] = useState("tr");
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState("signup");
+  const [workspaceProfile, setWorkspaceProfile] = useState(null);
   const [shipments, setShipments] = useState([]);
   const [coefficients, setCoefficients] = useState([]);
   const [planCatalog, setPlanCatalog] = useState(null);
@@ -465,9 +469,52 @@ function App() {
     }));
   }, [shipments]);
 
-  const handleLogin = useCallback(() => {
-    setActiveView("dashboard");
+  const currentWorkspaceAccess = useMemo(() => {
+    if (!planCatalog?.current_access) {
+      return null;
+    }
+
+    return {
+      ...planCatalog.current_access,
+      company_name:
+        workspaceProfile?.company_name ||
+        planCatalog.current_access.company_name ||
+        t(locale, "KarbonBeyan Hesabı", "KarbonBeyan Workspace"),
+      role_label:
+        workspaceProfile?.role_label || planCatalog.current_access.role_label,
+    };
+  }, [locale, planCatalog, workspaceProfile]);
+
+  const openAuth = useCallback((mode) => {
+    setAuthMode(mode);
+    setAuthModalOpen(true);
   }, []);
+
+  const handleLoginSuccess = useCallback(
+    (payload = {}) => {
+      setWorkspaceProfile((current) => ({
+        company_name: current?.company_name || t(locale, "KarbonBeyan Hesabı", "KarbonBeyan Workspace"),
+        role_label: current?.role_label || t(locale, "Firma Yöneticisi", "Company Admin"),
+        email: payload.email || current?.email || "",
+      }));
+      setActiveView("dashboard");
+    },
+    [locale],
+  );
+
+  const handleSignupSuccess = useCallback(
+    (payload = {}) => {
+      setWorkspaceProfile({
+        company_name: payload.company_name || t(locale, "Yeni Firma", "New Company"),
+        role_label: payload.role_label || t(locale, "Firma Yöneticisi", "Company Admin"),
+        full_name: payload.full_name || "",
+        email: payload.email || "",
+        sector: payload.sector || "",
+      });
+      setActiveView("dashboard");
+    },
+    [locale],
+  );
 
   const handleRequestQuote = useCallback((payload = {}) => {
     const subject = encodeURIComponent("KarbonBeyan Kurumsal Teklif Talebi");
@@ -504,11 +551,12 @@ function App() {
           <DashboardHome
             trendData={liveTrend}
             shipments={shipments}
+            plans={planCatalog?.plans || []}
             loading={loadingShipments}
             error={shipmentsError}
-            workspaceAccess={planCatalog?.current_access || null}
+            workspaceAccess={currentWorkspaceAccess}
             locale={locale}
-            onStartReport={() => setActiveView("yeni-rapor")}
+            onStartReport={() => openAuth("signup")}
             onRequestQuote={handleRequestQuote}
           />
         );
@@ -521,22 +569,32 @@ function App() {
         <Sidebar
           activeView={activeView}
           onChangeView={setActiveView}
-          workspaceAccess={planCatalog?.current_access || null}
+          workspaceAccess={currentWorkspaceAccess}
           locale={locale}
         />
 
         <main className="min-w-0">
           <Topbar
             activeView={activeView}
-            onStartReport={() => setActiveView("yeni-rapor")}
-            onLogin={handleLogin}
-            workspaceAccess={planCatalog?.current_access || null}
+            onLogin={() => openAuth("login")}
+            onSignUp={() => openAuth("signup")}
+            workspaceAccess={currentWorkspaceAccess}
             locale={locale}
             onLocaleChange={setLocale}
           />
           {renderView()}
         </main>
       </div>
+
+      <AuthModal
+        open={authModalOpen}
+        mode={authMode}
+        locale={locale}
+        onClose={() => setAuthModalOpen(false)}
+        onModeChange={setAuthMode}
+        onLoginSuccess={handleLoginSuccess}
+        onSignupSuccess={handleSignupSuccess}
+      />
     </div>
   );
 }

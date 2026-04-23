@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import { t, translateComplianceStatus, translateConfidence, translateRole } from "../lib/i18n";
 import { highestRiskRecords, pendingVerifications, upcomingDeclarations } from "../data/mockData";
 import EmissionsChart from "./charts/EmissionsChart";
@@ -19,22 +17,22 @@ function getRecommendedActions(locale, shipments) {
 
   if (lowConfidence.length > 0) {
     actions.push({
-      title: t(locale, "Üreticiden actual emisyon verisi isteyin", "Request actual emissions data from the supplier"),
+      title: t(locale, "Üreticiden gerçek emisyon verisi isteyin", "Request real emissions data from the supplier"),
       body: t(
         locale,
-        "Düşük güvenli kayıtlar tahmini verilere dayanıyor; resmi beyan öncesi actual veri toplanmalı.",
-        "Low-confidence records rely on estimated data; collect actual emissions data before formal declaration.",
+        "Düşük güvenli kayıtlar tahmini verilere dayanıyor; resmi beyan öncesi üreticiden gerçek veri alınmalı.",
+        "Low-confidence records rely on estimated data; obtain real producer data before formal declaration.",
       ),
     });
   }
 
   if (defaultHeavy.length > 0) {
     actions.push({
-      title: t(locale, "Default kullanımını azaltın", "Reduce reliance on default values"),
+      title: t(locale, "Tahmini değer kullanımını azaltın", "Reduce reliance on estimated values"),
       body: t(
         locale,
-        "Varsayılan değer kullanılan alanları görünür kılın ve bu kayıtları öncelikli iç takip listesine alın.",
-        "Identify fields using default values and move those records into your priority internal follow-up queue.",
+        "Tahmini değerle ilerleyen alanları görünür kılın ve bu kayıtları öncelikli iç takip listesine alın.",
+        "Identify fields using estimated values and move those records into your priority internal follow-up queue.",
       ),
     });
   }
@@ -44,8 +42,8 @@ function getRecommendedActions(locale, shipments) {
       title: t(locale, "Bağımsız doğrulamayı planlayın", "Arrange third-party verification"),
       body: t(
         locale,
-        "Verification bekleyen kayıtlar resmi beyanı bloklar; doğrulayıcı ataması ve belge akışı planlanmalı.",
-        "Pending verification blocks formal declaration; assign a verifier and plan the evidence flow.",
+        "Bağımsız kontrol bekleyen kayıtlar resmi beyanı durdurur; doğrulayıcı ataması ve belge akışı planlanmalı.",
+        "Records waiting for independent verification block formal declaration; assign a verifier and plan the evidence flow.",
       ),
     });
   }
@@ -85,6 +83,7 @@ function getRecommendedActions(locale, shipments) {
 function DashboardHome({
   trendData,
   shipments,
+  plans,
   loading,
   error,
   workspaceAccess,
@@ -92,12 +91,6 @@ function DashboardHome({
   onStartReport,
   onRequestQuote,
 }) {
-  const [quoteForm, setQuoteForm] = useState({
-    name: "",
-    company: "",
-    email: "",
-    message: "",
-  });
   const hasLiveShipments = shipments.length > 0;
   const pendingShipments = shipments.filter(
     (shipment) => shipment.payload.verification.verification_status === "pending",
@@ -151,9 +144,66 @@ function DashboardHome({
           : t(locale, "Orta", "Medium")
       : t(locale, "Orta", "Medium");
 
-  const handleQuoteChange = (field, value) => {
-    setQuoteForm((current) => ({ ...current, [field]: value }));
-  };
+  const pricingCards = [
+    {
+      planId: "starter",
+      name: "Starter",
+      audience: t(locale, "Küçük ve orta ölçekli ihracatçılar için", "For small and mid-sized exporters"),
+      value: t(
+        locale,
+        "CBAM sürecini başlatır ve ilk karbon maliyeti görünürlüğünü hızlıca sağlar.",
+        "Gets your CBAM process started and quickly gives you first carbon cost visibility.",
+      ),
+      features: [
+        t(locale, "İlk raporları tek panelde hazırlama", "Prepare first reports from one panel"),
+        t(locale, "Karbon maliyetini hızlı görme", "See carbon cost quickly"),
+        t(locale, "Eksik alanları fark etme", "Spot missing fields"),
+        t(locale, "PDF rapor alma", "Generate PDF reports"),
+        t(locale, "Temel arşiv takibi", "Basic archive tracking"),
+      ],
+      cta: t(locale, "Hemen Başla", "Start Now"),
+      action: "signup",
+    },
+    {
+      planId: "growth",
+      name: "Growth",
+      audience: t(locale, "Daha doğru maliyet ve risk takibi isteyen ekipler için", "For teams that want stronger cost and risk tracking"),
+      value: t(
+        locale,
+        "Operasyon görünürlüğünü artırır, kayıtları önceliklendirir ve riski daha net gösterir.",
+        "Improves operational visibility, prioritizes records and makes risk easier to act on.",
+      ),
+      features: [
+        t(locale, "Daha net maliyet görünümü", "Clearer cost visibility"),
+        t(locale, "Daha güçlü risk takibi", "Stronger risk tracking"),
+        t(locale, "Ekip içi takip kolaylığı", "Better team coordination"),
+        t(locale, "İç kontrol akışı", "Internal review flow"),
+        t(locale, "Gelişmiş arşiv filtreleri", "Advanced archive filters"),
+      ],
+      cta: t(locale, "Hemen Başla", "Start Now"),
+      action: "signup",
+      featured: true,
+    },
+    {
+      planId: "pro",
+      name: "Pro",
+      audience: t(locale, "Kurumsal yapı ve çok kullanıcılı ekipler için", "For enterprise teams and multi-user operations"),
+      value: t(
+        locale,
+        "Gelişmiş kontrol, tedarikçi akışı ve kurumsal süreç yönetimi sağlar.",
+        "Adds advanced control, supplier workflows and enterprise process management.",
+      ),
+      features: [
+        t(locale, "Çok kullanıcılı çalışma alanı", "Multi-user workspace"),
+        t(locale, "Tedarikçiden veri toplama akışı", "Supplier data collection flow"),
+        t(locale, "Gelişmiş süreç yönetimi", "Advanced process management"),
+        t(locale, "Kurumsal kurulum desteği", "Enterprise onboarding support"),
+        t(locale, "İleri seviye görünürlük", "Advanced visibility"),
+      ],
+      cta: t(locale, "İletişime Geç", "Contact Us"),
+      action: "quote",
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -193,11 +243,11 @@ function DashboardHome({
               <button
                 type="button"
                 onClick={() =>
-                  document.getElementById("quote-request-section")?.scrollIntoView({ behavior: "smooth", block: "start" })
+                  document.getElementById("pricing-section")?.scrollIntoView({ behavior: "smooth", block: "start" })
                 }
                 className="rounded-2xl border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
               >
-                {t(locale, "Teklif Al", "Request a Quote")}
+                {t(locale, "Paketleri Gör", "See Plans")}
               </button>
             </div>
             {!hasLiveShipments && !loading ? (
@@ -229,91 +279,101 @@ function DashboardHome({
       </section>
 
       <section
-        id="quote-request-section"
+        id="pricing-section"
         className="panel overflow-hidden border border-[#0E4FAF]/10 bg-[linear-gradient(180deg,#ffffff_0%,#f5f8ff_100%)] p-6"
       >
-        <div className="grid gap-6 xl:grid-cols-[1fr_1.1fr]">
-          <div>
-            <div className="text-sm font-semibold text-[#0E4FAF]">
-              {t(locale, "Kurumsal Paketler", "Enterprise Plans")}
-            </div>
-            <h3 className="mt-2 text-3xl font-extrabold text-ink">
-              {t(locale, "Yükseltmek için teklif isteyin", "Request a quote to upgrade")}
-            </h3>
-            <p className="mt-3 max-w-xl text-sm text-slate-600">
-              {t(
-                locale,
-                "Tedarikçi veri toplama, çok kullanıcılı ekip yapısı, doğrulama akışları ve kurumsal onboarding için ekibimiz sizinle doğrudan temas kursun.",
-                "Let our team contact you directly for supplier data collection, multi-user workspaces, verification flows and enterprise onboarding.",
-              )}
-            </p>
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              {[
-                t(locale, "Kurumsal onboarding", "Enterprise onboarding"),
-                t(locale, "Çoklu kullanıcı ve rol", "Multi-user roles"),
-                t(locale, "Supplier Data Collection", "Supplier Data Collection"),
-              ].map((item) => (
-                <div key={item} className="rounded-2xl bg-white px-4 py-4 text-sm font-semibold text-slate-700 shadow-sm">
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
+        <div>
+          <div className="text-sm font-semibold text-[#0E4FAF]">{t(locale, "Fiyatlandırma", "Pricing")}</div>
+          <h3 className="mt-2 text-3xl font-extrabold text-ink">
+            {t(locale, "Size uygun paketi seçin", "Choose the package that fits your team")}
+          </h3>
+          <p className="mt-3 max-w-3xl text-sm text-slate-600">
+            {t(
+              locale,
+              "CBAM sürecini yönetmek, karbon maliyetini görmek ve riski azaltmak için size uygun paketi seçin.",
+              "Choose the package that helps you manage CBAM, see carbon cost and reduce reporting risk.",
+            )}
+          </p>
+        </div>
 
-          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-            <div className="text-sm font-semibold text-slate-500">
-              {t(locale, "Teklif Formu", "Quote Request Form")}
-            </div>
-            <div className="mt-1 text-xl font-bold text-ink">
-              {t(locale, "Kurumsal satış ekibine ulaşın", "Reach the enterprise sales team")}
-            </div>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <input
-                className="field"
-                value={quoteForm.name}
-                onChange={(event) => handleQuoteChange("name", event.target.value)}
-                placeholder={t(locale, "Ad Soyad", "Full Name")}
-              />
-              <input
-                className="field"
-                value={quoteForm.company}
-                onChange={(event) => handleQuoteChange("company", event.target.value)}
-                placeholder={t(locale, "Firma", "Company")}
-              />
-              <input
-                className="field sm:col-span-2"
-                value={quoteForm.email}
-                onChange={(event) => handleQuoteChange("email", event.target.value)}
-                placeholder={t(locale, "Kurumsal E-posta", "Business Email")}
-              />
-              <textarea
-                className="field min-h-[128px] resize-y sm:col-span-2"
-                value={quoteForm.message}
-                onChange={(event) => handleQuoteChange("message", event.target.value)}
-                placeholder={t(
-                  locale,
-                  "Aylık rapor hacmi, ekip büyüklüğü veya tedarikçi akışı ihtiyacınızı kısaca yazın.",
-                  "Briefly describe your monthly report volume, team size or supplier workflow needs.",
-                )}
-              />
-            </div>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-slate-500">
-                {t(
-                  locale,
-                  "Formu gönderdiğinizde teklif talebiniz e-posta olarak satış kanalına düşer.",
-                  "When you submit the form, your quote request is sent by email to the sales channel.",
-                )}
-              </p>
-              <button
-                type="button"
-                onClick={() => onRequestQuote?.(quoteForm)}
-                className="btn-primary whitespace-nowrap"
-              >
-                {t(locale, "Teklif Al", "Request a Quote")}
-              </button>
-            </div>
-          </div>
+        <div className="mt-6 grid gap-4 xl:grid-cols-3">
+            {pricingCards.map((card) => {
+              const plan = (plans || []).find((item) => item.plan_id === card.planId);
+              return (
+                <article
+                  key={card.planId}
+                className={`rounded-[28px] border bg-white p-6 shadow-sm ${
+                  card.featured
+                    ? "border-pine/35 ring-2 ring-pine/20 shadow-[0_24px_60px_rgba(45,78,61,0.16)]"
+                    : "border-slate-200"
+                }`}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#0E4FAF]">
+                        {card.name}
+                      </div>
+                      <div className="mt-3 text-3xl font-extrabold text-ink">
+                        EUR {plan?.monthly_price_eur ?? "-"}
+                        <span className="ml-1 text-sm font-semibold text-slate-400">/ay</span>
+                      </div>
+                    </div>
+                  {card.featured ? (
+                    <div className="rounded-full bg-pine px-3 py-1 text-xs font-semibold text-white">
+                      {t(locale, "En çok tercih edilen", "Most Popular")}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="mt-5">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    {t(locale, "Kimler İçin", "Who It Is For")}
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-slate-700">{card.audience}</div>
+                </div>
+
+                <div className="mt-5">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    {t(locale, "Ne Sağlar", "What It Solves")}
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{card.value}</p>
+                </div>
+
+                <div className="mt-5 space-y-3">
+                  {card.features.map((feature) => (
+                    <div key={feature} className="flex items-start gap-3 text-sm text-slate-700">
+                      <span className="mt-1 h-2.5 w-2.5 rounded-full bg-pine" />
+                      <span>{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (card.action === "quote") {
+                        onRequestQuote?.({
+                          company: workspaceAccess?.company_name || "",
+                          message: t(
+                            locale,
+                            "Pro paket hakkında görüşmek istiyorum.",
+                            "I would like to discuss the Pro plan.",
+                          ),
+                        });
+                        return;
+                      }
+
+                      onStartReport?.();
+                    }}
+                    className={`w-full ${card.featured ? "btn-primary" : "btn-secondary"}`}
+                  >
+                    {card.cta}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
 
