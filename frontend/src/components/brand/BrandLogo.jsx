@@ -1,60 +1,99 @@
-function getStarPoints(cx, cy, outerRadius, innerRadius, spikes = 5) {
-  const points = [];
-  const step = Math.PI / spikes;
+import { resolveLocale } from "../../lib/i18n";
 
-  for (let index = 0; index < spikes * 2; index += 1) {
-    const radius = index % 2 === 0 ? outerRadius : innerRadius;
-    const angle = index * step - Math.PI / 2;
-    const x = cx + Math.cos(angle) * radius;
-    const y = cy + Math.sin(angle) * radius;
-    points.push(`${x},${y}`);
-  }
-
-  return points.join(" ");
+function TurkishMark({ compact }) {
+  return (
+    <svg viewBox="0 0 200 200" className={`${compact ? "h-14 w-14" : "h-20 w-20"} shrink-0`} aria-hidden="true">
+      <defs>
+        <linearGradient id="kb-tr-arc" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#0F2740" />
+          <stop offset="55%" stopColor="#1B9E4A" />
+          <stop offset="100%" stopColor="#8BDB5A" />
+        </linearGradient>
+        <linearGradient id="kb-tr-leaf" x1="20%" y1="0%" x2="80%" y2="100%">
+          <stop offset="0%" stopColor="#166E38" />
+          <stop offset="100%" stopColor="#7FD34E" />
+        </linearGradient>
+      </defs>
+      {/* K letter */}
+      <path d="M22 20 L22 180 L48 180 L48 110 L120 180 L152 180 L76 98 L152 20 L120 20 L48 90 L48 20 Z" fill="#0F2740" />
+      {/* Circular arc — clockwise ~270°, gap at bottom-left (~7–8 o'clock) */}
+      <path
+        d="M163 62 A 80 80 0 1 1 62 163"
+        fill="none"
+        stroke="url(#kb-tr-arc)"
+        strokeWidth="15"
+        strokeLinecap="round"
+      />
+      {/* Leaf inside upper-right of circle, over K */}
+      <path
+        d="M124 38 C96 40,72 56,60 86 C80 84,96 75,118 56 C116 70,108 84,94 95 C81 105,65 111,53 113 C57 123,66 131,78 135 C102 127,120 107,122 80 C124 62,118 47,124 38 Z"
+        fill="url(#kb-tr-leaf)"
+      />
+      <path d="M66 107 C82 94,96 84,116 68" stroke="rgba(255,255,255,0.35)" strokeWidth="5" strokeLinecap="round" fill="none" />
+    </svg>
+  );
 }
 
-const stars = Array.from({ length: 12 }, (_, index) => {
-  const angle = (Math.PI * 2 * index) / 12 - Math.PI / 2;
-  return {
-    cx: 28 + Math.cos(angle) * 12,
-    cy: 28 + Math.sin(angle) * 12,
-  };
-});
-
-function BrandLogo({ compact = false, className = "" }) {
+function EnglishMark({ compact }) {
   return (
-    <div
-      className={`inline-flex items-center gap-3 rounded-[26px] bg-[#0E4FAF] px-3 py-2 text-white shadow-[0_18px_40px_rgba(14,79,175,0.24)] ${className}`}
-    >
-      <svg viewBox="0 0 56 56" className={`${compact ? "h-11 w-11" : "h-14 w-14"} shrink-0`} aria-hidden="true">
-        <circle cx="28" cy="28" r="28" fill="#0B3F91" />
-        {stars.map((star) => (
-          <polygon
-            key={`${star.cx}-${star.cy}`}
-            points={getStarPoints(star.cx, star.cy, 2.4, 1.05)}
-            fill="#F6C343"
-          />
-        ))}
-        <path
-          d="M28 16 C34 17, 39 22, 39 29 C39 35, 35 40, 29 42 C24 40, 20 35, 20 29 C20 22, 24 18, 28 16 Z"
-          fill="#56B26F"
-        />
-        <path
-          d="M28 20 C30 24, 31 28, 29 37"
-          stroke="#EAF8EE"
-          strokeWidth="1.9"
-          strokeLinecap="round"
-          fill="none"
-        />
-      </svg>
+    <svg viewBox="0 0 200 200" className={`${compact ? "h-14 w-14" : "h-20 w-20"} shrink-0`} aria-hidden="true">
+      <defs>
+        <linearGradient id="kb-en-hex" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#0F2740" />
+          <stop offset="100%" stopColor="#7FD34E" />
+        </linearGradient>
+        <linearGradient id="kb-en-leaf" x1="20%" y1="0%" x2="80%" y2="100%">
+          <stop offset="0%" stopColor="#166E38" />
+          <stop offset="100%" stopColor="#7FD34E" />
+        </linearGradient>
+      </defs>
+      {/* Flat-top hexagon border */}
+      <path
+        d="M58 14 L142 14 L184 90 L142 166 L58 166 L16 90 Z"
+        fill="none"
+        stroke="url(#kb-en-hex)"
+        strokeWidth="12"
+        strokeLinejoin="round"
+      />
+      {/* K letter */}
+      <path d="M44 46 L44 154 L68 154 L68 108 L128 154 L156 154 L92 98 L156 46 L128 46 L68 90 L68 46 Z" fill="#0F2740" />
+      {/* Leaf at lower-center of K */}
+      <path
+        d="M118 112 C96 114,78 128,72 154 C90 152,105 143,118 126 C117 138,111 150,100 159 C90 167,77 171,66 172 C70 180,79 185,90 187 C114 180,130 160,132 138 C133 124,127 116,118 112 Z"
+        fill="url(#kb-en-leaf)"
+      />
+      <path d="M80 162 C92 153,104 145,116 130" stroke="rgba(255,255,255,0.35)" strokeWidth="5" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+}
+
+function BrandLogo({ compact = false, className = "", locale = "tr" }) {
+  const activeLocale = resolveLocale(locale);
+  const isEnglish = activeLocale === "en";
+
+  return (
+    <div className={`inline-flex items-center gap-3 ${className}`}>
+      {isEnglish ? <EnglishMark compact={compact} /> : <TurkishMark compact={compact} />}
 
       <div className="min-w-0">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.36em] text-white/70">
-          CBAM Intelligence
+        <div className={`${compact ? "text-[1.9rem]" : "text-[2.4rem]"} font-black uppercase leading-none tracking-[0.05em] text-[#0F2740]`}>
+          KARBON<span className="text-[#2F9A49]">BEYAN</span>
         </div>
-        <div className={`${compact ? "text-lg" : "text-xl"} truncate font-extrabold tracking-[0.02em]`}>
-          KarbonBeyan
-        </div>
+        {isEnglish ? (
+          <>
+            <div className={`${compact ? "my-1 border-t border-[#0F2740]/30" : "my-1.5 border-t border-[#0F2740]/30"}`} />
+            <div className={`${compact ? "text-[0.5rem]" : "text-[0.75rem]"} uppercase tracking-[0.14em] text-[#0F2740]`}>
+              CBAM COMPLIANCE <span className="px-1 text-[#2F9A49]">•</span> CARBON COST <span className="px-1 text-[#2F9A49]">•</span> RISK MANAGEMENT
+            </div>
+            <div className={`${compact ? "mt-0.5 text-[0.45rem]" : "mt-1 text-[0.7rem]"} italic tracking-[0.06em] text-[#2F9A49]`}>
+              Accurate Data. Lower Risk. Confident Compliance.
+            </div>
+          </>
+        ) : (
+          <div className={`${compact ? "mt-1 text-[0.5rem]" : "mt-1.5 text-[0.75rem]"} uppercase tracking-[0.14em] text-[#0F2740]`}>
+            CBAM UYUMU <span className="px-1 text-[#2F9A49]">|</span> KARBON MALİYETİ <span className="px-1 text-[#2F9A49]">|</span> RİSK YÖNETİMİ
+          </div>
+        )}
       </div>
     </div>
   );

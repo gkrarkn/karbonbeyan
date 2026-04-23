@@ -32,7 +32,7 @@ function Topbar({
   return (
     <header className="panel mb-6 flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex items-center gap-4">
-        <BrandLogo compact />
+        <BrandLogo compact locale={locale} />
         <div>
           <div className="text-xs uppercase tracking-[0.24em] text-slate-400">KarbonBeyan Platform</div>
           <h1 className="text-2xl font-extrabold text-ink">{titleMap[activeView]}</h1>
