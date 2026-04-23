@@ -42,9 +42,9 @@ PLAN_FEATURES = {
 def get_plan_catalog() -> PlanCatalogResponse:
     starter_features = [
         PLAN_FEATURES["archive_filters"],
-        PLAN_FEATURES["verification_workspace"],
     ]
     growth_features = starter_features + [
+        PLAN_FEATURES["verification_workspace"],
         PLAN_FEATURES["team_collaboration"],
     ]
     pro_features = growth_features + [
@@ -57,7 +57,7 @@ def get_plan_catalog() -> PlanCatalogResponse:
             plan_id="starter",
             name="Starter",
             tagline="İlk CBAM operasyonunu düzenli hale getiren KOBİ paketi.",
-            monthly_price_eur=99,
+            monthly_price_eur=59,
             usage_limits={
                 "reports_per_month": 15,
                 "supplier_requests": 0,
@@ -69,10 +69,10 @@ def get_plan_catalog() -> PlanCatalogResponse:
             plan_id="growth",
             name="Growth",
             tagline="İç inceleme ve ekip koordinasyonunu yöneten büyüyen ihracatçılar için.",
-            monthly_price_eur=249,
+            monthly_price_eur=229,
             usage_limits={
                 "reports_per_month": 75,
-                "supplier_requests": 10,
+                "supplier_requests": 0,
                 "team_members": 5,
             },
             features=growth_features,

@@ -295,7 +295,9 @@ function SettingsView({ planCatalog, loading, error, locale }) {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="text-sm font-semibold text-slate-500">{plan.name}</div>
-                <h3 className="mt-1 text-2xl font-extrabold text-ink">EUR {plan.monthly_price_eur}/ay</h3>
+                <h3 className="mt-1 text-2xl font-extrabold text-ink">
+                  {plan.plan_id === "pro" ? "Fiyat için iletişime geçin" : `EUR ${plan.monthly_price_eur}/ay`}
+                </h3>
               </div>
               {plan.recommended ? (
                 <div className="rounded-full bg-pine/10 px-3 py-1 text-xs font-semibold text-pine">Önerilen</div>

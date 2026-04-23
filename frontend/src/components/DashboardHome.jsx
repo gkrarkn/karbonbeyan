@@ -155,11 +155,11 @@ function DashboardHome({
         "Gets your CBAM process started and quickly gives you first carbon cost visibility.",
       ),
       features: [
-        t(locale, "İlk raporları tek panelde hazırlama", "Prepare first reports from one panel"),
-        t(locale, "Karbon maliyetini hızlı görme", "See carbon cost quickly"),
-        t(locale, "Eksik alanları fark etme", "Spot missing fields"),
+        t(locale, "Aylık 15 rapora kadar kullanım", "Up to 15 reports per month"),
+        t(locale, "1 kullanıcı ile çalışma", "Single-user workspace"),
         t(locale, "PDF rapor alma", "Generate PDF reports"),
-        t(locale, "Temel arşiv takibi", "Basic archive tracking"),
+        t(locale, "Temel arşiv ve kayıt takibi", "Basic archive and record tracking"),
+        t(locale, "Karbon maliyetini hızlı görme", "See carbon cost quickly"),
       ],
       cta: t(locale, "Hemen Başla", "Start Now"),
       action: "signup",
@@ -174,10 +174,10 @@ function DashboardHome({
         "Improves operational visibility, prioritizes records and makes risk easier to act on.",
       ),
       features: [
-        t(locale, "Daha net maliyet görünümü", "Clearer cost visibility"),
-        t(locale, "Daha güçlü risk takibi", "Stronger risk tracking"),
-        t(locale, "Ekip içi takip kolaylığı", "Better team coordination"),
-        t(locale, "İç kontrol akışı", "Internal review flow"),
+        t(locale, "Aylık 75 rapora kadar kullanım", "Up to 75 reports per month"),
+        t(locale, "5 kullanıcıya kadar ekip erişimi", "Up to 5 team members"),
+        t(locale, "İç kontrol ve inceleme akışı", "Internal review workflow"),
+        t(locale, "Daha güçlü risk ve maliyet takibi", "Stronger risk and cost tracking"),
         t(locale, "Gelişmiş arşiv filtreleri", "Advanced archive filters"),
       ],
       cta: t(locale, "Hemen Başla", "Start Now"),
@@ -194,11 +194,11 @@ function DashboardHome({
         "Adds advanced control, supplier workflows and enterprise process management.",
       ),
       features: [
-        t(locale, "Çok kullanıcılı çalışma alanı", "Multi-user workspace"),
+        t(locale, "Çok kullanıcılı kurumsal yapı", "Enterprise multi-user setup"),
         t(locale, "Tedarikçiden veri toplama akışı", "Supplier data collection flow"),
-        t(locale, "Gelişmiş süreç yönetimi", "Advanced process management"),
-        t(locale, "Kurumsal kurulum desteği", "Enterprise onboarding support"),
-        t(locale, "İleri seviye görünürlük", "Advanced visibility"),
+        t(locale, "API ve entegrasyon desteği", "API and integration support"),
+        t(locale, "Kurumsal kurulum ve onboarding", "Enterprise setup and onboarding"),
+        t(locale, "İleri seviye süreç görünürlüğü", "Advanced process visibility"),
       ],
       cta: t(locale, "İletişime Geç", "Contact Us"),
       action: "quote",
@@ -313,10 +313,16 @@ function DashboardHome({
                       <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#0E4FAF]">
                         {card.name}
                       </div>
-                      <div className="mt-3 text-3xl font-extrabold text-ink">
-                        EUR {plan?.monthly_price_eur ?? "-"}
-                        <span className="ml-1 text-sm font-semibold text-slate-400">/ay</span>
-                      </div>
+                      {card.planId === "pro" ? (
+                        <div className="mt-3 text-2xl font-extrabold text-ink">
+                          {t(locale, "Fiyat için iletişime geçin", "Contact us for pricing")}
+                        </div>
+                      ) : (
+                        <div className="mt-3 text-3xl font-extrabold text-ink">
+                          EUR {plan?.monthly_price_eur ?? "-"}
+                          <span className="ml-1 text-sm font-semibold text-slate-400">/ay</span>
+                        </div>
+                      )}
                     </div>
                   {card.featured ? (
                     <div className="rounded-full bg-pine px-3 py-1 text-xs font-semibold text-white">
