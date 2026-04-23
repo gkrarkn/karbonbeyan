@@ -6,7 +6,7 @@ function Sidebar({ activeView, onChangeView, workspaceAccess, locale }) {
   return (
     <aside className="panel flex h-full min-h-[calc(100vh-2rem)] w-full flex-col justify-between overflow-hidden bg-ink text-white lg:max-w-[280px]">
       <div className="space-y-8 p-6">
-        <BrandLogo dark locale={locale} className="w-full justify-start" />
+        <BrandLogo compact dark locale={locale} className="w-full justify-start" />
 
         <div className="rounded-3xl bg-white/8 p-5">
           <div className="text-xs uppercase tracking-[0.28em] text-white/60">KarbonBeyan Vision</div>

@@ -31,19 +31,16 @@ function Topbar({
 
   return (
     <header className="panel mb-6 flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-1">
         <BrandLogo compact locale={locale} />
-        <div>
-          <div className="text-xs uppercase tracking-[0.24em] text-slate-400">KarbonBeyan Platform</div>
-          <h1 className="text-lg font-extrabold text-ink">{titleMap[activeView]}</h1>
-          {workspaceAccess ? (
-            <div className="mt-2 inline-flex items-center rounded-full bg-[#0E4FAF]/8 px-3 py-1 text-xs font-semibold text-[#0E4FAF]">
-              {workspaceAccess.trial_status === "active"
-                ? t(locale, `${workspaceAccess.trial_days_remaining} gün full trial aktif`, `${workspaceAccess.trial_days_remaining} day full trial active`)
-                : `${translateRole(locale, workspaceAccess.role_label)} · ${workspaceAccess.active_plan}`}
-            </div>
-          ) : null}
-        </div>
+        <p className="text-sm font-semibold text-slate-600">{titleMap[activeView]}</p>
+        {workspaceAccess ? (
+          <div className="inline-flex w-fit items-center rounded-full bg-[#0E4FAF]/8 px-3 py-0.5 text-xs font-semibold text-[#0E4FAF]">
+            {workspaceAccess.trial_status === "active"
+              ? t(locale, `${workspaceAccess.trial_days_remaining} gün full trial aktif`, `${workspaceAccess.trial_days_remaining} day full trial active`)
+              : `${translateRole(locale, workspaceAccess.role_label)} · ${workspaceAccess.active_plan}`}
+          </div>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
