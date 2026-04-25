@@ -1,5 +1,4 @@
 import { t, translateComplianceStatus, translateConfidence, translateRole } from "../lib/i18n";
-import { highestRiskRecords, pendingVerifications, upcomingDeclarations } from "../data/mockData";
 import EmissionsChart from "./charts/EmissionsChart";
 
 function getRecommendedActions(locale, shipments) {
@@ -383,227 +382,178 @@ function DashboardHome({
         </div>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-3">
-        {[
-          {
-            title: "Eksik Veri (Default Kullanıldı)",
-            value: complianceCounts["Eksik Veri (Default Kullanıldı)"],
-            meta: "Öncelikli iç takip",
-            tone: "bg-clay",
-          },
-          {
-            title: "İç İncelemeye Hazır",
-            value: complianceCounts["İç İncelemeye Hazır"],
-            meta: "Operasyon ekibi kontrol etmeli",
-            tone: "bg-moss",
-          },
-          {
-            title: "Resmi Beyana Uygun",
-            value: complianceCounts["Resmi Beyana Uygun"],
-            meta: "Doğrulama tamamlandı",
-            tone: "bg-pine",
-          },
-        ].map((card) => (
-          <article key={card.title} className="panel overflow-hidden">
-            <div className={`h-2 ${card.tone}`} />
-            <div className="p-6">
-              <div className="text-sm font-semibold text-slate-500">{card.title}</div>
-              <div className="mt-3 text-3xl font-extrabold text-ink">{card.value}</div>
-              <div className="mt-2 text-sm text-slate-500">{card.meta}</div>
-            </div>
-          </article>
-        ))}
-      </section>
+      {hasLiveShipments && (
+        <>
+          <section className="grid gap-4 xl:grid-cols-3">
+            {[
+              { title: "Eksik Veri (Default Kullanıldı)", value: complianceCounts["Eksik Veri (Default Kullanıldı)"], meta: "Öncelikli iç takip", tone: "bg-clay" },
+              { title: "İç İncelemeye Hazır", value: complianceCounts["İç İncelemeye Hazır"], meta: "Operasyon ekibi kontrol etmeli", tone: "bg-moss" },
+              { title: "Resmi Beyana Uygun", value: complianceCounts["Resmi Beyana Uygun"], meta: "Doğrulama tamamlandı", tone: "bg-pine" },
+            ].map((card) => (
+              <article key={card.title} className="panel overflow-hidden">
+                <div className={`h-2 ${card.tone}`} />
+                <div className="p-6">
+                  <div className="text-sm font-semibold text-slate-500">{card.title}</div>
+                  <div className="mt-3 text-3xl font-extrabold text-ink">{card.value}</div>
+                  <div className="mt-2 text-sm text-slate-500">{card.meta}</div>
+                </div>
+              </article>
+            ))}
+          </section>
 
-      <section className="grid gap-4 xl:grid-cols-3">
-        {[
-          { title: t(locale, "Toplam Gömülü Emisyon", "Total Embedded Emissions"), value: `${totalEmissions} tCO2e`, meta: t(locale, "Canlı kayıtlar", "Live records"), tone: "bg-pine" },
-          { title: t(locale, "Ortalama Veri Güveni", "Average Data Confidence"), value: avgConfidence, meta: t(locale, "Shipment kayıtlarından hesaplandı", "Calculated from shipment records"), tone: "bg-clay" },
-          {
-            title: t(locale, "Verification Bekleyen", "Pending Verification"),
-            value: pendingShipments.length,
-            meta: t(locale, "Resmi beyana engel kayıt", "Blocking official declaration"),
-            tone: "bg-moss",
-          },
-        ].map((card) => (
-          <article key={card.title} className="panel overflow-hidden">
-            <div className={`h-2 ${card.tone}`} />
-            <div className="p-6">
-              <div className="text-sm font-semibold text-slate-500">{card.title}</div>
-              <div className="mt-3 text-3xl font-extrabold text-ink">{card.value}</div>
-              <div className="mt-2 text-sm text-slate-500">{card.meta}</div>
-            </div>
-          </article>
-        ))}
-      </section>
+          <section className="grid gap-4 xl:grid-cols-3">
+            {[
+              { title: t(locale, "Toplam Gömülü Emisyon", "Total Embedded Emissions"), value: `${totalEmissions} tCO2e`, meta: t(locale, "Canlı kayıtlar", "Live records"), tone: "bg-pine" },
+              { title: t(locale, "Ortalama Veri Güveni", "Average Data Confidence"), value: avgConfidence, meta: t(locale, "Shipment kayıtlarından hesaplandı", "Calculated from shipment records"), tone: "bg-clay" },
+              { title: t(locale, "Verification Bekleyen", "Pending Verification"), value: pendingShipments.length, meta: t(locale, "Resmi beyana engel kayıt", "Blocking official declaration"), tone: "bg-moss" },
+            ].map((card) => (
+              <article key={card.title} className="panel overflow-hidden">
+                <div className={`h-2 ${card.tone}`} />
+                <div className="p-6">
+                  <div className="text-sm font-semibold text-slate-500">{card.title}</div>
+                  <div className="mt-3 text-3xl font-extrabold text-ink">{card.value}</div>
+                  <div className="mt-2 text-sm text-slate-500">{card.meta}</div>
+                </div>
+              </article>
+            ))}
+          </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.45fr_0.95fr]">
-        <EmissionsChart data={trendData} />
-
-        <div className="panel p-6">
-          <div className="text-sm font-semibold text-slate-500">En Riskli 5 Kayıt</div>
-          <h3 className="mt-1 text-xl font-bold text-ink">{t(locale, "Öncelikli müdahale listesi", "Priority intervention list")}</h3>
-          <div className="mt-5 space-y-4">
-            {(hasLiveShipments
-              ? riskyShipments.slice(0, 5).map((shipment) => ({
-                  ref: shipment.payload.import_details.shipment_reference,
-                  company: shipment.payload.facility.installation_name,
-                  reason: shipment.calculation.data_quality_summary.summary_text,
-                  confidence: shipment.calculation.confidence_label,
-                }))
-              : highestRiskRecords
-            ).map((row) => (
-              <div key={row.ref} className="rounded-2xl bg-mist p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-semibold text-ink">{row.company}</div>
-                  <div className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
-                    {translateConfidence(locale, row.confidence)}
+          <section className="grid gap-6 xl:grid-cols-[1.45fr_0.95fr]">
+            <EmissionsChart data={trendData} />
+            <div className="panel p-6">
+              <div className="text-sm font-semibold text-slate-500">En Riskli 5 Kayıt</div>
+              <h3 className="mt-1 text-xl font-bold text-ink">{t(locale, "Öncelikli müdahale listesi", "Priority intervention list")}</h3>
+              <div className="mt-5 space-y-4">
+                {riskyShipments.slice(0, 5).map((shipment) => (
+                  <div key={shipment.shipment_id} className="rounded-2xl bg-mist p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-semibold text-ink">{shipment.payload.facility.installation_name}</div>
+                      <div className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+                        {translateConfidence(locale, shipment.calculation.confidence_label)}
+                      </div>
+                    </div>
+                    <div className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                      {shipment.payload.import_details.shipment_reference}
+                    </div>
+                    <p className="mt-2 text-sm text-slate-600">{shipment.calculation.data_quality_summary.summary_text}</p>
                   </div>
-                </div>
-                <div className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                  {row.ref}
-                </div>
-                <p className="mt-2 text-sm text-slate-600">{row.reason}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-3">
-        <div className="panel p-6">
-          <div className="text-sm font-semibold text-slate-500">Beyan Dönemi Yaklaşanlar</div>
-          <h3 className="mt-1 text-xl font-bold text-ink">Takvim baskısı olan kayıtlar</h3>
-          <div className="mt-5 space-y-4">
-            {(hasLiveShipments
-              ? shipments.slice(0, 3).map((shipment) => ({
-                  company: shipment.payload.facility.installation_name,
-                  period: `${shipment.payload.reporting.declaration_year}`,
-                  due: "Takvimlenmeli",
-                }))
-              : upcomingDeclarations
-            ).map((row) => (
-              <div key={`${row.company}-${row.period}`} className="rounded-2xl bg-slate-50 p-4">
-                <div className="text-sm font-semibold text-ink">{row.company}</div>
-                <div className="mt-2 text-sm text-slate-600">{row.period}</div>
-                <div className="mt-1 text-sm font-semibold text-clay">{row.due}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="panel p-6">
-          <div className="text-sm font-semibold text-slate-500">Verification Bekleyenler</div>
-          <h3 className="mt-1 text-xl font-bold text-ink">Doğrulayıcı aksiyonu gerekli</h3>
-          <div className="mt-5 space-y-4">
-            {(pendingShipments.slice(0, 3).map((shipment) => ({
-              company: shipment.payload.facility.installation_name,
-              verifier: shipment.payload.verification.verifier_name || "Atanmadı",
-              status: "Bekliyor",
-            })).length > 0
-              ? pendingShipments.slice(0, 3).map((shipment) => ({
-                  company: shipment.payload.facility.installation_name,
-                  verifier: shipment.payload.verification.verifier_name || "Atanmadı",
-                  status: "Bekliyor",
-                }))
-              : pendingVerifications
-            ).map((row) => (
-              <div key={`${row.company}-${row.status}`} className="rounded-2xl bg-slate-50 p-4">
-                <div className="text-sm font-semibold text-ink">{row.company}</div>
-                <div className="mt-2 text-sm text-slate-600">Verifier: {row.verifier}</div>
-                <div className="mt-1 text-sm font-semibold text-slate-700">{translateComplianceStatus(locale, row.status)}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="panel p-6">
-          <div className="text-sm font-semibold text-slate-500">{t(locale, "Veri Güveni", "Data Confidence")}</div>
-          <h3 className="mt-1 text-xl font-bold text-ink">{t(locale, "Actual vs Default dağılımı", "Actual vs Default mix")}</h3>
-          <div className="mt-6 space-y-4">
-            <div className="rounded-2xl bg-mist p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-slate-700">{t(locale, "Actual alanlar", "Actual fields")}</span>
-                <span className="text-sm font-bold text-pine">%{avgActualShare}</span>
-              </div>
-              <div className="mt-3 h-3 rounded-full bg-white">
-                <div
-                  className="h-3 rounded-full bg-pine"
-                  style={{ width: `${avgActualShare}%` }}
-                />
-              </div>
-            </div>
-            <div className="rounded-2xl bg-mist p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-slate-700">{t(locale, "Default alanlar", "Default fields")}</span>
-                <span className="text-sm font-bold text-clay">%{avgDefaultShare}</span>
-              </div>
-              <div className="mt-3 h-3 rounded-full bg-white">
-                <div
-                  className="h-3 rounded-full bg-clay"
-                  style={{ width: `${avgDefaultShare}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="panel p-6">
-        <div className="text-sm font-semibold text-slate-500">{t(locale, "Şimdi Ne Yapmalıyım?", "What Should I Do Next?")}</div>
-        <h3 className="mt-1 text-xl font-bold text-ink">
-          {t(locale, "Durumu değil, aksiyonu ve riski görün", "See the action and the risk, not just the status")}
-        </h3>
-        <div className="mt-5 grid gap-4 xl:grid-cols-3">
-          {getRecommendedActions(locale, shipments).map((action) => (
-            <div key={action.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <div className="text-base font-bold text-ink">{action.title}</div>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{action.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="panel p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-sm font-semibold text-slate-500">{t(locale, "Son Kayıtlar", "Latest Records")}</div>
-            <h3 className="mt-1 text-xl font-bold text-ink">{t(locale, "Arşivden son raporlar", "Recent reports from the archive")}</h3>
-          </div>
-          <button type="button" className="btn-secondary">
-            Tümünü Gör
-          </button>
-        </div>
-
-        {loading ? <p className="mt-6 text-sm text-slate-500">Kayıtlar yükleniyor...</p> : null}
-        {!loading && error ? <p className="mt-6 text-sm font-medium text-clay">{error}</p> : null}
-        {!loading && shipments.length > 0 ? (
-          <div className="mt-6 overflow-x-auto">
-            <table className="min-w-full text-left">
-              <thead>
-                <tr className="border-b border-slate-200 text-sm text-slate-500">
-                  <th className="pb-3 font-semibold">Referans</th>
-                  <th className="pb-3 font-semibold">Firma</th>
-                  <th className="pb-3 font-semibold">Yöntem</th>
-                  <th className="pb-3 font-semibold">Durum</th>
-                  <th className="pb-3 font-semibold">Emisyon</th>
-                </tr>
-              </thead>
-              <tbody>
-                {shipments.slice(0, 5).map((shipment) => (
-                  <tr key={shipment.shipment_id} className="border-b border-slate-100 text-sm text-slate-700">
-                    <td className="py-4 font-semibold">{shipment.payload.import_details.shipment_reference}</td>
-                    <td className="py-4">{shipment.payload.facility.installation_name}</td>
-                    <td className="py-4">{shipment.calculation.calculation_method_applied}</td>
-                    <td className="py-4">{translateComplianceStatus(locale, shipment.calculation.compliance_status_label)}</td>
-                    <td className="py-4">{shipment.calculation.total_embedded_emissions_tco2} tCO2e</td>
-                  </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
-      </section>
+              </div>
+            </div>
+          </section>
+
+          <section className="grid gap-6 xl:grid-cols-3">
+            <div className="panel p-6">
+              <div className="text-sm font-semibold text-slate-500">Beyan Dönemi Yaklaşanlar</div>
+              <h3 className="mt-1 text-xl font-bold text-ink">Takvim baskısı olan kayıtlar</h3>
+              <div className="mt-5 space-y-4">
+                {shipments.slice(0, 3).map((shipment) => (
+                  <div key={shipment.shipment_id} className="rounded-2xl bg-slate-50 p-4">
+                    <div className="text-sm font-semibold text-ink">{shipment.payload.facility.installation_name}</div>
+                    <div className="mt-2 text-sm text-slate-600">{shipment.payload.reporting.declaration_year}</div>
+                    <div className="mt-1 text-sm font-semibold text-clay">Takvimlenmeli</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="panel p-6">
+              <div className="text-sm font-semibold text-slate-500">Verification Bekleyenler</div>
+              <h3 className="mt-1 text-xl font-bold text-ink">Doğrulayıcı aksiyonu gerekli</h3>
+              <div className="mt-5 space-y-4">
+                {pendingShipments.slice(0, 3).map((shipment) => (
+                  <div key={shipment.shipment_id} className="rounded-2xl bg-slate-50 p-4">
+                    <div className="text-sm font-semibold text-ink">{shipment.payload.facility.installation_name}</div>
+                    <div className="mt-2 text-sm text-slate-600">Verifier: {shipment.payload.verification.verifier_name || t(locale, "Atanmadı", "Unassigned")}</div>
+                    <div className="mt-1 text-sm font-semibold text-slate-700">{t(locale, "Bekliyor", "Pending")}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="panel p-6">
+              <div className="text-sm font-semibold text-slate-500">{t(locale, "Veri Güveni", "Data Confidence")}</div>
+              <h3 className="mt-1 text-xl font-bold text-ink">{t(locale, "Actual vs Default dağılımı", "Actual vs Default mix")}</h3>
+              <div className="mt-6 space-y-4">
+                {[
+                  { label: t(locale, "Actual alanlar", "Actual fields"), pct: avgActualShare, color: "bg-pine", textColor: "text-pine" },
+                  { label: t(locale, "Default alanlar", "Default fields"), pct: avgDefaultShare, color: "bg-clay", textColor: "text-clay" },
+                ].map((bar) => (
+                  <div key={bar.label} className="rounded-2xl bg-mist p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-slate-700">{bar.label}</span>
+                      <span className={`text-sm font-bold ${bar.textColor}`}>%{bar.pct}</span>
+                    </div>
+                    <div className="mt-3 h-3 rounded-full bg-white">
+                      <div className={`h-3 rounded-full ${bar.color}`} style={{ width: `${bar.pct}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+
+      {hasLiveShipments && (
+        <>
+          <section className="panel p-6">
+            <div className="text-sm font-semibold text-slate-500">{t(locale, "Şimdi Ne Yapmalıyım?", "What Should I Do Next?")}</div>
+            <h3 className="mt-1 text-xl font-bold text-ink">
+              {t(locale, "Durumu değil, aksiyonu ve riski görün", "See the action and the risk, not just the status")}
+            </h3>
+            <div className="mt-5 grid gap-4 xl:grid-cols-3">
+              {getRecommendedActions(locale, shipments).map((action) => (
+                <div key={action.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                  <div className="text-base font-bold text-ink">{action.title}</div>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{action.body}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="panel p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-semibold text-slate-500">{t(locale, "Son Kayıtlar", "Latest Records")}</div>
+                <h3 className="mt-1 text-xl font-bold text-ink">{t(locale, "Arşivden son raporlar", "Recent reports from the archive")}</h3>
+              </div>
+              <button type="button" className="btn-secondary">
+                Tümünü Gör
+              </button>
+            </div>
+
+            {loading ? <p className="mt-6 text-sm text-slate-500">Kayıtlar yükleniyor...</p> : null}
+            {!loading && error ? <p className="mt-6 text-sm font-medium text-clay">{error}</p> : null}
+            {!loading && shipments.length > 0 ? (
+              <div className="mt-6 overflow-x-auto">
+                <table className="min-w-full text-left">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-sm text-slate-500">
+                      <th className="pb-3 font-semibold">Referans</th>
+                      <th className="pb-3 font-semibold">Firma</th>
+                      <th className="pb-3 font-semibold">Yöntem</th>
+                      <th className="pb-3 font-semibold">Durum</th>
+                      <th className="pb-3 font-semibold">Emisyon</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shipments.slice(0, 5).map((shipment) => (
+                      <tr key={shipment.shipment_id} className="border-b border-slate-100 text-sm text-slate-700">
+                        <td className="py-4 font-semibold">{shipment.payload.import_details.shipment_reference}</td>
+                        <td className="py-4">{shipment.payload.facility.installation_name}</td>
+                        <td className="py-4">{shipment.calculation.calculation_method_applied}</td>
+                        <td className="py-4">{translateComplianceStatus(locale, shipment.calculation.compliance_status_label)}</td>
+                        <td className="py-4">{shipment.calculation.total_embedded_emissions_tco2} tCO2e</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+          </section>
+        </>
+      )}
     </div>
   );
 }
