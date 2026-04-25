@@ -512,18 +512,18 @@ function AuthRequiredView({ locale, onSignUp, onLogin }) {
     <div className="panel p-6">
       <div className="text-sm font-semibold text-slate-500">{t(locale, "Uyum Akışı", "Workflow")}</div>
       <h2 className="mt-1 text-2xl font-extrabold text-ink">
-        {t(locale, "CBAM uyum kaydı oluşturmak için giriş yapın", "Sign in to create a CBAM compliance record")}
+        {t(locale, "İlk CBAM maliyet hesabınızı oluşturmak için giriş yapın", "Sign in to create your first CBAM cost calculation")}
       </h2>
       <p className="mt-2 max-w-2xl text-sm text-slate-600">
         {t(
           locale,
-          "Kayıtlar ve PDF beyanları çalışma alanınıza bağlanır; bu yüzden rapor akışı hesap açtıktan sonra başlar.",
-          "Records and declaration PDFs are tied to your workspace, so the workflow starts after authentication.",
+          "Sevkiyat bilgilerinizi girin; sistem karbon maliyetinizi, eksik verileri ve beyana hazırlık durumunuzu göstersin.",
+          "Enter your shipment data; the system will show your carbon cost, missing data, and declaration readiness.",
         )}
       </p>
       <div className="mt-6 flex flex-wrap gap-3">
         <button type="button" className="btn-primary" onClick={onSignUp}>
-          {t(locale, "Hesap Oluştur", "Create Account")}
+          {t(locale, "Hemen Başla", "Start Now")}
         </button>
         <button type="button" className="btn-secondary" onClick={onLogin}>
           {t(locale, "Giriş Yap", "Log In")}
