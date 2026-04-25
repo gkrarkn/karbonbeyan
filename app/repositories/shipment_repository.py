@@ -97,6 +97,10 @@ class ShipmentRepository:
             row = session.get(ShipmentORM, shipment_id)
             return self._to_record(row) if row else None
 
+    def count(self) -> int:
+        with self._session_factory() as session:
+            return session.scalar(select(func.count()).select_from(ShipmentORM)) or 0
+
     def list(self) -> list[ShipmentRecord]:
         with self._session_factory() as session:
             rows = session.execute(

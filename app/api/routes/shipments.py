@@ -31,7 +31,7 @@ def list_default_values_reference() -> list[DefaultValueRecord]:
 
 @router.get("/reference/plans", response_model=PlanCatalogResponse)
 def get_plan_catalog_reference() -> PlanCatalogResponse:
-    return get_plan_catalog()
+    return get_plan_catalog(reports_count=shipment_repository.count())
 
 
 @router.post("/shipments", response_model=ShipmentRecord)

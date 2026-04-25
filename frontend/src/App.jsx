@@ -363,9 +363,17 @@ function SettingsView({ planCatalog, loading, error, locale, onClearAll }) {
                       </td>
                     ))}
                     <td className="py-4">
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${hasFeatureAccess(currentAccess, featureKey) ? "bg-pine/10 text-pine" : "bg-slate-100 text-slate-500"}`}>
-                        {hasFeatureAccess(currentAccess, featureKey) ? "Erişim açık" : "Kilitli"}
-                      </span>
+                      {hasFeatureAccess(currentAccess, featureKey) ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-pine px-3 py-1 text-xs font-semibold text-white">
+                          <span className="h-1.5 w-1.5 rounded-full bg-white/60" />
+                          Açık
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-400">
+                          <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                          Kilitli
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -404,22 +412,6 @@ function SettingsView({ planCatalog, loading, error, locale, onClearAll }) {
         </div>
       </div>
 
-      {onClearAll && (
-        <div className="panel border border-clay/20 p-6">
-          <div className="text-sm font-semibold text-clay">Veri Yönetimi</div>
-          <h3 className="mt-1 text-xl font-bold text-ink">Demo kayıtları temizle</h3>
-          <p className="mt-2 text-sm text-slate-600">
-            Test sırasında oluşturulan tüm sevkiyat kayıtlarını kalıcı olarak siler. Bu işlem geri alınamaz.
-          </p>
-          <button
-            type="button"
-            onClick={onClearAll}
-            className="mt-4 rounded-xl bg-clay px-5 py-2.5 text-sm font-semibold text-white hover:bg-clay/80 transition"
-          >
-            Tüm kayıtları sil
-          </button>
-        </div>
-      )}
     </div>
   );
 }

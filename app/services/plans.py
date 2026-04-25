@@ -39,7 +39,7 @@ PLAN_FEATURES = {
 }
 
 
-def get_plan_catalog() -> PlanCatalogResponse:
+def get_plan_catalog(reports_count: int = 0) -> PlanCatalogResponse:
     starter_features = [
         PLAN_FEATURES["archive_filters"],
     ]
@@ -100,9 +100,9 @@ def get_plan_catalog() -> PlanCatalogResponse:
         trial_days_remaining=7,
         accessible_feature_keys=[feature.key for feature in pro_features],
         usage_counters={
-            "reports_per_month": 8,
-            "supplier_requests": 2,
-            "team_members": 3,
+            "reports_per_month": reports_count,
+            "supplier_requests": 0,
+            "team_members": 1,
         },
         usage_limits={
             "reports_per_month": 25,
