@@ -346,6 +346,14 @@ function SettingsView({ planCatalog, loading, error, locale }) {
   const roleLabel = currentAccess.role === "company_admin"
     ? t(locale, "Firma Yöneticisi", "Company Admin")
     : currentAccess.role_label;
+  const getPlanPriceDisplay = (plan) => {
+    if (locale === "en") {
+      if (plan.plan_id === "starter") return "USD 69/mo";
+      if (plan.plan_id === "growth") return "USD 269/mo";
+    }
+
+    return `EUR ${plan.monthly_price_eur}/${t(locale, "ay", "mo")}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -388,7 +396,7 @@ function SettingsView({ planCatalog, loading, error, locale }) {
                 <h3 className="mt-1 text-2xl font-extrabold text-ink">
                   {plan.plan_id === "pro"
                     ? t(locale, "Fiyat için iletişime geçin", "Contact us for pricing")
-                    : `EUR ${plan.monthly_price_eur}/${t(locale, "ay", "mo")}`}
+                    : getPlanPriceDisplay(plan)}
                 </h3>
               </div>
               {plan.recommended ? (
@@ -720,6 +728,7 @@ function App() {
         <main className="min-w-0">
           <Topbar
             activeView={activeView}
+            onHome={() => handleChangeView("dashboard")}
             onLogin={() => openAuth("login")}
             onSignUp={() => openAuth("signup")}
             onLogout={handleLogout}

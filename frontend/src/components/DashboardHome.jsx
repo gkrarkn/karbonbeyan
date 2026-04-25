@@ -206,6 +206,10 @@ function DashboardHome({
       action: "quote",
     },
   ];
+  const priceDisplayByPlan = {
+    starter: locale === "en" ? { currency: "USD", amount: 69 } : null,
+    growth: locale === "en" ? { currency: "USD", amount: 269 } : null,
+  };
 
   return (
     <div className="space-y-6">
@@ -386,7 +390,10 @@ function DashboardHome({
         <div className="mt-6 grid gap-4 xl:grid-cols-3">
             {pricingCards.map((card) => {
               const plan = (plans || []).find((item) => item.plan_id === card.planId);
-              const monthlyPrice = plan?.monthly_price_eur ?? card.price;
+              const displayPrice = priceDisplayByPlan[card.planId] ?? {
+                currency: "EUR",
+                amount: plan?.monthly_price_eur ?? card.price,
+              };
               return (
                 <article
                   key={card.planId}
@@ -407,7 +414,7 @@ function DashboardHome({
                         </div>
                       ) : (
                         <div className="mt-3 text-3xl font-extrabold text-ink">
-                          EUR {monthlyPrice}
+                          {displayPrice.currency} {displayPrice.amount}
                           <span className="ml-1 text-sm font-semibold text-slate-400">
                             /{t(locale, "ay", "mo")}
                           </span>

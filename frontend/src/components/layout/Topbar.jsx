@@ -3,6 +3,7 @@ import { locales, t, translateRole } from "../../lib/i18n";
 
 function Topbar({
   activeView,
+  onHome,
   onLogin,
   onSignUp,
   onLogout,
@@ -37,6 +38,10 @@ function Topbar({
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <button type="button" onClick={onHome} className="btn-secondary">
+          {t(locale, "Ana Sayfa", "Home")}
+        </button>
+
         <div className="flex items-center rounded-2xl border border-slate-200 bg-white p-1">
           {Object.entries(locales).map(([key, label]) => (
             <button key={key} type="button" onClick={() => onLocaleChange(key)}
