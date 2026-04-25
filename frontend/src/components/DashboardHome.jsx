@@ -230,6 +230,9 @@ function DashboardHome({
         <div className="grid gap-6 bg-[linear-gradient(135deg,#0E4FAF_0%,#0B3F91_55%,#0B2447_100%)] p-6 text-white xl:grid-cols-[1.2fr_0.8fr]">
           <div>
             <BrandLogo locale={locale} className="rounded-2xl bg-white px-3 py-2" />
+            <div className="mt-5 inline-flex rounded-full bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/80">
+              {t(locale, "CBAM = Karbon Sınır Düzenleme Mekanizması", "CBAM = Carbon Border Adjustment Mechanism")}
+            </div>
             <h2 className="mt-3 text-3xl font-extrabold">
               {t(
                 locale,
