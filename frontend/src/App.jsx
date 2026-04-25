@@ -7,7 +7,6 @@ import Topbar from "./components/layout/Topbar";
 import ReportWizard from "./components/report-wizard/ReportWizard";
 import { emissionTrend } from "./data/mockData";
 import {
-  deleteAllShipments,
   downloadShipmentPdf,
   listDefaultValues,
   listPlans,
@@ -255,7 +254,7 @@ function CoefficientsView({ coefficients, loading, error, locale }) {
   );
 }
 
-function SettingsView({ planCatalog, loading, error, locale, onClearAll }) {
+function SettingsView({ planCatalog, loading, error, locale }) {
   if (loading) {
     return <div className="panel p-6 text-sm text-slate-600">{t(locale, "Plan ve yetkilendirme yükleniyor...", "Loading plans and access rules...")}</div>;
   }
@@ -266,27 +265,63 @@ function SettingsView({ planCatalog, loading, error, locale, onClearAll }) {
 
   const { current_access: currentAccess, plans, trial_days: trialDays } = planCatalog;
   const featureKeys = [...new Set(plans.flatMap((plan) => plan.features.map((feature) => feature.key)))];
-  const featureMap = Object.fromEntries(
-    plans.flatMap((plan) => plan.features.map((feature) => [feature.key, feature])),
-  );
+
+  const planTaglines = {
+    starter: t(locale, "İlk CBAM operasyonunu düzenli hale getiren KOBİ paketi.", "The SME package that organizes your first CBAM operation."),
+    growth: t(locale, "İç inceleme ve ekip koordinasyonunu yöneten büyüyen ihracatçılar için.", "For growing exporters managing internal review and team coordination."),
+    pro: t(locale, "Çok tesisli yapı, tedarikçi veri toplama ve ileri entegrasyon seviyesi.", "Multi-facility structure, supplier data collection and advanced integration."),
+  };
+
+  const featureLabels = {
+    archive_filters: {
+      label: t(locale, "Gelişmiş Arşiv Filtreleri", "Advanced Archive Filters"),
+      description: t(locale, "Durum, sektör ve referans bazlı filtreleme ile PDF yeniden indirme.", "Filter by status, sector and reference; re-download declaration PDFs."),
+    },
+    verification_workspace: {
+      label: t(locale, "Verification Workspace", "Verification Workspace"),
+      description: t(locale, "İç inceleme, verifier takibi ve kanıt paketleme akışı.", "Internal review, verifier tracking and evidence packaging flow."),
+    },
+    supplier_data_collection: {
+      label: t(locale, "Supplier Data Collection", "Supplier Data Collection"),
+      description: t(locale, "Tedarikçiden actual veri ve kanıt dokümanı toplama modülü.", "Collect actual emission data and supporting documents directly from suppliers."),
+    },
+    team_collaboration: {
+      label: t(locale, "Takım Çalışması", "Team Collaboration"),
+      description: t(locale, "Rol bazlı erişim, görev paylaşımı ve çok kullanıcılı operasyon ekranı.", "Role-based access, task sharing and multi-user operation screen."),
+    },
+    api_access: {
+      label: t(locale, "API Erişimi", "API Access"),
+      description: t(locale, "ERP veya iç sistemlerle veri senkronizasyonu için entegrasyon uçları.", "Integration endpoints for data sync with ERP or internal systems."),
+    },
+  };
+
+  const roleLabel = currentAccess.role === "company_admin"
+    ? t(locale, "Firma Yöneticisi", "Company Admin")
+    : currentAccess.role_label;
 
   return (
     <div className="space-y-6">
       <div className="panel p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="text-sm font-semibold text-slate-500">Plan ve Yetkilendirme</div>
-            <h2 className="mt-1 text-2xl font-extrabold text-ink">7 günlük full trial ile tüm süreci görün</h2>
+            <div className="text-sm font-semibold text-slate-500">{t(locale, "Plan ve Yetkilendirme", "Plans and Access")}</div>
+            <h2 className="mt-1 text-2xl font-extrabold text-ink">
+              {t(locale, "7 günlük full trial ile tüm süreci görün", "See the full process with a 7-day full trial")}
+            </h2>
             <p className="mt-2 max-w-3xl text-sm text-slate-600">
-              Freemium yerine tüm modülleri açan bir trial kurgusu aktif. Trial bittikten sonra kullanım limiti ve RBAC kuralları seçilen plana göre devreye girer.
+              {t(
+                locale,
+                "Freemium yerine tüm modülleri açan bir trial kurgusu aktif. Trial bittikten sonra kullanım limiti ve RBAC kuralları seçilen plana göre devreye girer.",
+                "A full-access trial is active instead of freemium. After the trial ends, usage limits and RBAC rules apply based on the selected plan.",
+              )}
             </p>
           </div>
           <div className="rounded-3xl bg-[#0E4FAF] px-5 py-4 text-white">
-            <div className="text-xs uppercase tracking-[0.24em] text-white/70">Aktif Erişim</div>
-            <div className="mt-2 text-lg font-extrabold">{currentAccess.role_label}</div>
+            <div className="text-xs uppercase tracking-[0.24em] text-white/70">{t(locale, "Aktif Erişim", "Active Access")}</div>
+            <div className="mt-2 text-lg font-extrabold">{roleLabel}</div>
             <div className="mt-1 text-sm text-white/80">
               {currentAccess.trial_status === "active"
-                ? `${currentAccess.trial_days_remaining}/${trialDays} gün full trial`
+                ? `${currentAccess.trial_days_remaining}/${trialDays} ${t(locale, "gün full trial", "day full trial")}`
                 : currentAccess.active_plan}
             </div>
           </div>
@@ -303,28 +338,32 @@ function SettingsView({ planCatalog, loading, error, locale, onClearAll }) {
               <div>
                 <div className="text-sm font-semibold text-slate-500">{plan.name}</div>
                 <h3 className="mt-1 text-2xl font-extrabold text-ink">
-                  {plan.plan_id === "pro" ? "Fiyat için iletişime geçin" : `EUR ${plan.monthly_price_eur}/ay`}
+                  {plan.plan_id === "pro"
+                    ? t(locale, "Fiyat için iletişime geçin", "Contact us for pricing")
+                    : `EUR ${plan.monthly_price_eur}/${t(locale, "ay", "mo")}`}
                 </h3>
               </div>
               {plan.recommended ? (
-                <div className="rounded-full bg-pine/10 px-3 py-1 text-xs font-semibold text-pine">Önerilen</div>
+                <div className="rounded-full bg-pine/10 px-3 py-1 text-xs font-semibold text-pine">
+                  {t(locale, "Önerilen", "Recommended")}
+                </div>
               ) : null}
             </div>
-            <p className="mt-3 text-sm text-slate-600">{plan.tagline}</p>
+            <p className="mt-3 text-sm text-slate-600">{planTaglines[plan.plan_id] ?? plan.tagline}</p>
 
             <div className="mt-5 space-y-3">
               <UsageMeter
-                label="Rapor / ay"
+                label={t(locale, "Rapor / ay", "Reports / mo")}
                 used={currentAccess.usage_counters.reports_per_month}
                 limit={plan.usage_limits.reports_per_month}
               />
               <UsageMeter
-                label="Supplier request"
+                label={t(locale, "Tedarikçi isteği", "Supplier requests")}
                 used={currentAccess.usage_counters.supplier_requests}
                 limit={plan.usage_limits.supplier_requests}
               />
               <UsageMeter
-                label="Takım üyesi"
+                label={t(locale, "Takım üyesi", "Team members")}
                 used={currentAccess.usage_counters.team_members}
                 limit={plan.usage_limits.team_members}
               />
@@ -335,43 +374,43 @@ function SettingsView({ planCatalog, loading, error, locale, onClearAll }) {
 
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <div className="panel p-6">
-          <div className="text-sm font-semibold text-slate-500">RBAC Özellik Matrisi</div>
-          <h3 className="mt-1 text-xl font-bold text-ink">Plan bazlı erişim ayrımı</h3>
+          <div className="text-sm font-semibold text-slate-500">{t(locale, "RBAC Özellik Matrisi", "RBAC Feature Matrix")}</div>
+          <h3 className="mt-1 text-xl font-bold text-ink">{t(locale, "Plan bazlı erişim ayrımı", "Plan-based access control")}</h3>
           <div className="mt-6 overflow-x-auto">
             <table className="min-w-full text-left">
               <thead>
                 <tr className="border-b border-slate-200 text-sm text-slate-500">
-                  <th className="pb-3 font-semibold">Özellik</th>
+                  <th className="pb-3 font-semibold">{t(locale, "Özellik", "Feature")}</th>
                   {plans.map((plan) => (
                     <th key={plan.plan_id} className="pb-3 font-semibold">
                       {plan.name}
                     </th>
                   ))}
-                  <th className="pb-3 font-semibold">Şu an</th>
+                  <th className="pb-3 font-semibold">{t(locale, "Şu an", "Now")}</th>
                 </tr>
               </thead>
               <tbody>
                 {featureKeys.map((featureKey) => (
                   <tr key={featureKey} className="border-b border-slate-100 text-sm text-slate-700">
                     <td className="py-4">
-                      <div className="font-semibold">{featureMap[featureKey]?.label}</div>
-                      <div className="mt-1 text-xs text-slate-500">{featureMap[featureKey]?.description}</div>
+                      <div className="font-semibold">{featureLabels[featureKey]?.label}</div>
+                      <div className="mt-1 text-xs text-slate-500">{featureLabels[featureKey]?.description}</div>
                     </td>
                     {plans.map((plan) => (
                       <td key={`${plan.plan_id}-${featureKey}`} className="py-4">
-                        {plan.features.some((feature) => feature.key === featureKey) ? "Var" : "-"}
+                        {plan.features.some((feature) => feature.key === featureKey) ? t(locale, "Var", "Yes") : "–"}
                       </td>
                     ))}
                     <td className="py-4">
                       {hasFeatureAccess(currentAccess, featureKey) ? (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-pine px-3 py-1 text-xs font-semibold text-white">
                           <span className="h-1.5 w-1.5 rounded-full bg-white/60" />
-                          Açık
+                          {t(locale, "Açık", "Active")}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-400">
                           <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-                          Kilitli
+                          {t(locale, "Kilitli", "Locked")}
                         </span>
                       )}
                     </td>
@@ -383,30 +422,34 @@ function SettingsView({ planCatalog, loading, error, locale, onClearAll }) {
         </div>
 
         <div className="panel p-6">
-          <div className="text-sm font-semibold text-slate-500">Kullanım Limiti</div>
-          <h3 className="mt-1 text-xl font-bold text-ink">Mevcut trial tüketimi</h3>
+          <div className="text-sm font-semibold text-slate-500">{t(locale, "Kullanım Limiti", "Usage Limits")}</div>
+          <h3 className="mt-1 text-xl font-bold text-ink">{t(locale, "Mevcut trial tüketimi", "Current trial usage")}</h3>
           <div className="mt-5 space-y-4">
             <UsageMeter
-              label="Rapor / ay"
+              label={t(locale, "Rapor / ay", "Reports / mo")}
               used={currentAccess.usage_counters.reports_per_month}
               limit={currentAccess.usage_limits.reports_per_month}
             />
             <UsageMeter
-              label="Supplier request"
+              label={t(locale, "Tedarikçi isteği", "Supplier requests")}
               used={currentAccess.usage_counters.supplier_requests}
               limit={currentAccess.usage_limits.supplier_requests}
             />
             <UsageMeter
-              label="Takım üyesi"
+              label={t(locale, "Takım üyesi", "Team members")}
               used={currentAccess.usage_counters.team_members}
               limit={currentAccess.usage_limits.team_members}
             />
           </div>
 
           <div className="mt-6 rounded-2xl bg-mist p-4">
-            <div className="text-sm font-semibold text-ink">Trial kuralı</div>
+            <div className="text-sm font-semibold text-ink">{t(locale, "Trial kuralı", "Trial policy")}</div>
             <p className="mt-2 text-sm text-slate-600">
-              Trial aktifken Supplier Data Collection dahil tüm özellikler açılır. Trial sonrası erişim, plan seviyesi ve rol bazlı yetki kuralına göre filtrelenir.
+              {t(
+                locale,
+                "Trial aktifken Supplier Data Collection dahil tüm özellikler açılır. Trial sonrası erişim, plan seviyesi ve rol bazlı yetki kuralına göre filtrelenir.",
+                "While the trial is active, all features including Supplier Data Collection are unlocked. After the trial, access is filtered by plan level and role-based permissions.",
+              )}
             </p>
           </div>
         </div>
@@ -503,15 +546,6 @@ function App() {
     };
   }, [locale, planCatalog, workspaceProfile]);
 
-  const handleClearAll = useCallback(async () => {
-    if (!window.confirm("Tüm sevkiyat kayıtları silinecek. Emin misiniz?")) return;
-    try {
-      await deleteAllShipments();
-      setShipments([]);
-    } catch (err) {
-      alert(err.message || "Silme işlemi başarısız.");
-    }
-  }, []);
 
   const openAuth = useCallback((mode) => {
     setAuthMode(mode);
@@ -573,7 +607,7 @@ function App() {
           />
         );
       case "ayarlar":
-        return <SettingsView planCatalog={planCatalog} loading={loadingPlans} error={plansError} locale={locale} onClearAll={handleClearAll} />;
+        return <SettingsView planCatalog={planCatalog} loading={loadingPlans} error={plansError} locale={locale} />;
       default:
         return (
           <DashboardHome
