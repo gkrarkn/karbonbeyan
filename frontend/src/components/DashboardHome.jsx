@@ -1,4 +1,5 @@
 import { t, translateComplianceStatus, translateConfidence, translateRole } from "../lib/i18n";
+import BrandLogo from "./brand/BrandLogo";
 import EmissionsChart from "./charts/EmissionsChart";
 
 function getRecommendedActions(locale, shipments) {
@@ -53,24 +54,24 @@ function getRecommendedActions(locale, shipments) {
         title: t(locale, "Tahmini ve gerçek veri farkını görün", "See the gap between estimated and actual data"),
         body: t(
           locale,
-          "İlk sevkiyatları içeri aldığınızda sistem veri güvenini ve risk seviyesini otomatik gösterecek.",
-          "Once your first shipments are inside, the system will automatically expose confidence and reporting risk.",
+          "Tahmini değerler gerçek üretim verinizi yansıtmayabilir. Bu durum ileride maliyet farkı veya uyum riski yaratabilir.",
+          "Default values may not reflect your real production data. This can create cost differences or compliance risk later.",
         ),
       },
       {
         title: t(locale, "Eksik alanları anında tespit edin", "Spot missing fields instantly"),
         body: t(
           locale,
-          "Takımınız hangi kaydın default ile ilerlediğini ve hangisinin güçlendirilmesi gerektiğini tek ekranda görecek.",
-          "Your team will see which records rely on defaults and which ones must be strengthened before declaration.",
+          "Eksik veri, yanlış maliyet görünürlüğüne neden olabilir. KarbonBeyan bu alanları görünür hale getirir.",
+          "Missing data can lead to inaccurate cost visibility. KarbonBeyan makes those fields visible.",
         ),
       },
       {
         title: t(locale, "Resmi beyana hazır olup olmadığınızı bilin", "Know whether you are ready for formal declaration"),
         body: t(
           locale,
-          "Uygunluk statüsü ve verification kuyruğu sayesinde hangi kaydın gerçekten hazır olduğunu net göreceksiniz.",
-          "Compliance status and verification queues make it clear which records are actually ready for formal declaration.",
+          "Beyana hazır olmayan kayıtları erken görün, riski kapatmak için doğru aksiyonu alın.",
+          "See records that are not declaration-ready early and take the right action to close the risk.",
         ),
       },
     );
@@ -147,11 +148,12 @@ function DashboardHome({
     {
       planId: "starter",
       name: "Starter",
+      price: 59,
       audience: t(locale, "Küçük ve orta ölçekli ihracatçılar için", "For small and mid-sized exporters"),
       value: t(
         locale,
-        "CBAM sürecini başlatır ve ilk karbon maliyeti görünürlüğünü hızlıca sağlar.",
-        "Gets your CBAM process started and quickly gives you first carbon cost visibility.",
+        "CBAM sürecinizi tek panelde takip etmeye başlayın.",
+        "Start tracking your CBAM process from one panel.",
       ),
       features: [
         t(locale, "Aylık 15 rapora kadar kullanım", "Up to 15 reports per month"),
@@ -166,11 +168,12 @@ function DashboardHome({
     {
       planId: "growth",
       name: "Growth",
+      price: 229,
       audience: t(locale, "Daha doğru maliyet ve risk takibi isteyen ekipler için", "For teams that want stronger cost and risk tracking"),
       value: t(
         locale,
-        "Operasyon görünürlüğünü artırır, kayıtları önceliklendirir ve riski daha net gösterir.",
-        "Improves operational visibility, prioritizes records and makes risk easier to act on.",
+        "Tahmini yerine kendi verinize göre daha doğru maliyet görünürlüğü.",
+        "See more accurate cost visibility based on your own data instead of defaults.",
       ),
       features: [
         t(locale, "Aylık 75 rapora kadar kullanım", "Up to 75 reports per month"),
@@ -189,8 +192,8 @@ function DashboardHome({
       audience: t(locale, "Kurumsal yapı ve çok kullanıcılı ekipler için", "For enterprise teams and multi-user operations"),
       value: t(
         locale,
-        "Gelişmiş kontrol, tedarikçi akışı ve kurumsal süreç yönetimi sağlar.",
-        "Adds advanced control, supplier workflows and enterprise process management.",
+        "Kurumsal ölçekte CBAM sürecini yönetin.",
+        "Manage your CBAM process at enterprise scale.",
       ),
       features: [
         t(locale, "Çok kullanıcılı kurumsal yapı", "Enterprise multi-user setup"),
@@ -209,26 +212,33 @@ function DashboardHome({
       <section className="panel overflow-hidden">
         <div className="grid gap-6 bg-[linear-gradient(135deg,#0E4FAF_0%,#0B3F91_55%,#0B2447_100%)] p-6 text-white xl:grid-cols-[1.2fr_0.8fr]">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/65">KarbonBeyan Vision</div>
+            <BrandLogo locale={locale} className="rounded-2xl bg-white px-3 py-2" />
             <h2 className="mt-3 text-3xl font-extrabold">
               {t(
                 locale,
-                "AB'ye yaptığınız sevkiyatlarda karbon maliyetinizi görün, raporlama riskinizi azaltın",
-                "See the carbon cost of your EU shipments and reduce reporting risk",
+                "AB sevkiyatlarınızda karbon maliyetinizi doğru hesaplıyor musunuz?",
+                "Are you calculating the true carbon cost of your EU shipments?",
               )}
             </h2>
             <p className="mt-3 max-w-2xl text-sm text-white/75">
               {t(
                 locale,
-                "Tahmini ve gerçek veri farkını görün, eksik alanları anında tespit edin ve resmi beyana hazır olup olmadığınızı tek panelden bilin.",
-                "See the gap between estimated and actual data, spot missing fields instantly and know whether you are ready for formal declaration from one panel.",
+                "Tahmini (default) değerlerle ilerliyorsanız CBAM maliyetiniz gerçeği yansıtmayabilir.",
+                "If you rely on default values, your CBAM cost may be inaccurate.",
+              )}
+            </p>
+            <p className="mt-2 max-w-2xl text-sm font-semibold text-white/90">
+              {t(
+                locale,
+                "Eksik verileri görün, riskleri tespit edin, beyana hazır olup olmadığınızı anlayın.",
+                "See missing data, identify risks, and understand whether you are ready for declaration.",
               )}
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               {[
-                t(locale, "Tahmini ve gerçek veri farkını görün", "See the gap between estimated and actual data"),
-                t(locale, "Eksik alanları anında tespit edin", "Spot missing fields instantly"),
-                t(locale, "Resmi beyana hazır olup olmadığınızı bilin", "Know whether you are ready for formal declaration"),
+                t(locale, "Default veri riskini görün", "See default data risk"),
+                t(locale, "Yanlış maliyet ihtimalini azaltın", "Reduce inaccurate cost risk"),
+                t(locale, "Beyana hazır olup olmadığınızı anlayın", "Understand declaration readiness"),
               ].map((item) => (
                 <div key={item} className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-white/90">
                   {item}
@@ -237,23 +247,25 @@ function DashboardHome({
             </div>
             <div className="mt-5 flex flex-wrap gap-3">
               <button type="button" onClick={onStartReport} className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-[#0E4FAF] shadow-sm transition hover:translate-y-[-1px]">
-                {t(locale, "Ücretsiz Başla", "Start Free")}
+                {t(locale, "Hemen Başla", "Start Now")}
               </button>
               <button
                 type="button"
                 onClick={() =>
-                  document.getElementById("pricing-section")?.scrollIntoView({ behavior: "smooth", block: "start" })
+                  document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth", block: "start" })
                 }
                 className="rounded-2xl border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
               >
-                {t(locale, "Paketleri Gör", "See Plans")}
+                {t(locale, "Nasıl Çalışır", "How It Works")}
               </button>
             </div>
-            {!hasLiveShipments && !loading ? (
-              <div className="mt-4 inline-flex rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white/85">
-                {t(locale, "İlk canlı kayıt geldiğinde dashboard metrikleri otomatik dolacaktır.", "Dashboard metrics will auto-populate when the first live record arrives.")}
-              </div>
-            ) : null}
+            <div className="mt-4 inline-flex rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white/85">
+              {t(
+                locale,
+                "Tahmini değer kullanımı CBAM maliyetinizin gerçeği yansıtmamasına neden olabilir.",
+                "If you rely on default values, your CBAM cost may be inaccurate.",
+              )}
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
@@ -277,6 +289,82 @@ function DashboardHome({
         </div>
       </section>
 
+      <section className="grid gap-4 xl:grid-cols-3">
+        {getRecommendedActions(locale, shipments).map((action) => (
+          <article key={action.title} className="panel p-6">
+            <div className="text-base font-bold text-ink">{action.title}</div>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{action.body}</p>
+          </article>
+        ))}
+      </section>
+
+      <section id="how-it-works" className="panel p-6">
+        <div className="text-sm font-semibold text-[#0E4FAF]">{t(locale, "Nasıl Çalışır", "How It Works")}</div>
+        <h3 className="mt-2 text-3xl font-extrabold text-ink">
+          {t(locale, "Üç adımda maliyet ve risk görünürlüğü", "Cost and risk visibility in three steps")}
+        </h3>
+        <div className="mt-6 grid gap-4 xl:grid-cols-3">
+          {[
+            {
+              title: t(locale, "Veriyi gir", "Enter your data"),
+              result: t(locale, "gerçek maliyeti gör", "see the real cost"),
+            },
+            {
+              title: t(locale, "Sistem hesaplasın", "Let the system calculate"),
+              result: t(locale, "eksikleri tespit et", "detect missing data"),
+            },
+            {
+              title: t(locale, "Rapor oluştur", "Generate a report"),
+              result: t(locale, "beyana hazır olup olmadığını anla", "understand declaration readiness"),
+            },
+          ].map((step, index) => (
+            <div key={step.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0E4FAF] text-sm font-bold text-white">
+                {index + 1}
+              </div>
+              <div className="mt-4 text-lg font-extrabold text-ink">{step.title}</div>
+              <div className="mt-2 text-sm font-semibold text-pine">{step.result}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel grid gap-6 overflow-hidden p-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <div>
+          <div className="text-sm font-semibold text-[#0E4FAF]">{t(locale, "Çıktı", "Output")}</div>
+          <h3 className="mt-2 text-3xl font-extrabold text-ink">
+            {t(locale, "Örnek Raporu Görün", "See a Sample Report")}
+          </h3>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            {t(
+              locale,
+              "KarbonBeyan, verilerinizi yapılandırılmış bir rapora dönüştürerek eksikleri ve riskleri görünür hale getirir.",
+              "KarbonBeyan turns your data into a structured report that makes missing fields and risks visible.",
+            )}
+          </p>
+          <button type="button" onClick={onStartReport} className="btn-primary mt-6">
+            {t(locale, "Örnek Raporu İncele", "Review Sample Report")}
+          </button>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="space-y-3 blur-[1.2px]">
+            <div className="h-4 w-48 rounded-full bg-slate-200" />
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="h-20 rounded-xl bg-[#0E4FAF]/12" />
+              <div className="h-20 rounded-xl bg-pine/15" />
+              <div className="h-20 rounded-xl bg-clay/15" />
+            </div>
+            <div className="h-3 rounded-full bg-slate-200" />
+            <div className="h-3 w-11/12 rounded-full bg-slate-200" />
+            <div className="h-3 w-9/12 rounded-full bg-slate-200" />
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div className="h-28 rounded-xl bg-slate-100" />
+              <div className="h-28 rounded-xl bg-slate-100" />
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section
         id="pricing-section"
         className="panel overflow-hidden border border-[#0E4FAF]/10 bg-[linear-gradient(180deg,#ffffff_0%,#f5f8ff_100%)] p-6"
@@ -284,13 +372,13 @@ function DashboardHome({
         <div>
           <div className="text-sm font-semibold text-[#0E4FAF]">{t(locale, "Fiyatlandırma", "Pricing")}</div>
           <h3 className="mt-2 text-3xl font-extrabold text-ink">
-            {t(locale, "Size uygun paketi seçin", "Choose the package that fits your team")}
+            {t(locale, "Default veri riskini azaltan planı seçin", "Choose the plan that reduces default data risk")}
           </h3>
           <p className="mt-3 max-w-3xl text-sm text-slate-600">
             {t(
               locale,
-              "CBAM sürecini yönetmek, karbon maliyetini görmek ve riski azaltmak için size uygun paketi seçin.",
-              "Choose the package that helps you manage CBAM, see carbon cost and reduce reporting risk.",
+              "Kendi verinizle daha doğru maliyet görünürlüğü elde edin, eksikleri erken görün ve CBAM sürecinizi tek yerden yönetin.",
+              "Use your own data for more accurate cost visibility, see missing fields early and manage your CBAM process from one place.",
             )}
           </p>
         </div>
@@ -298,6 +386,7 @@ function DashboardHome({
         <div className="mt-6 grid gap-4 xl:grid-cols-3">
             {pricingCards.map((card) => {
               const plan = (plans || []).find((item) => item.plan_id === card.planId);
+              const monthlyPrice = plan?.monthly_price_eur ?? card.price;
               return (
                 <article
                   key={card.planId}
@@ -318,14 +407,16 @@ function DashboardHome({
                         </div>
                       ) : (
                         <div className="mt-3 text-3xl font-extrabold text-ink">
-                          EUR {plan?.monthly_price_eur ?? "-"}
-                          <span className="ml-1 text-sm font-semibold text-slate-400">/ay</span>
+                          EUR {monthlyPrice}
+                          <span className="ml-1 text-sm font-semibold text-slate-400">
+                            /{t(locale, "ay", "mo")}
+                          </span>
                         </div>
                       )}
                     </div>
                   {card.featured ? (
                     <div className="rounded-full bg-pine px-3 py-1 text-xs font-semibold text-white">
-                      {t(locale, "En çok tercih edilen", "Most Popular")}
+                      {t(locale, "En Çok Tercih Edilen", "Most Preferred")}
                     </div>
                   ) : null}
                 </div>

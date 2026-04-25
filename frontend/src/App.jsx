@@ -11,12 +11,13 @@ import {
   downloadShipmentPdf,
   getMe,
   getToken,
-  listDefaultValues,
   listPlans,
   listShipments,
   setToken,
 } from "./lib/api";
 import { t, translateComplianceStatus, translateConfidence } from "./lib/i18n";
+
+const validViewIds = new Set(["dashboard", "yeni-rapor", "arsiv", "ayarlar"]);
 
 const sectorLabels = {
   iron_steel: "Demir-Çelik",
@@ -27,22 +28,8 @@ const sectorLabels = {
   hydrogen: "Hidrojen",
 };
 
-const routeLabels = {
-  carbon_steel_bf_bof: "BF/BOF",
-  carbon_steel_dri_eaf: "DRI/EAF",
-  scrap_eaf: "Hurda EAF",
-  primary_aluminium: "Primary",
-  primary_aluminum: "Primary",
-  secondary_aluminium: "Secondary",
-  secondary_aluminum: "Secondary",
-};
-
 function getSectorLabel(value) {
   return sectorLabels[value] || value || "-";
-}
-
-function getRouteLabel(value) {
-  return routeLabels[value] || value || "-";
 }
 
 function hasFeatureAccess(workspaceAccess, featureKey) {
@@ -55,6 +42,110 @@ function hasFeatureAccess(workspaceAccess, featureKey) {
   }
 
   return workspaceAccess.accessible_feature_keys.includes(featureKey);
+}
+
+const planFeatures = {
+  archive_filters: {
+    key: "archive_filters",
+    label: "Gelişmiş Arşiv Filtreleri",
+    description: "Durum, sektör ve referans bazlı filtreleme ile PDF yeniden indirme.",
+  },
+  verification_workspace: {
+    key: "verification_workspace",
+    label: "Verification Workspace",
+    description: "İç inceleme, verifier takibi ve kanıt paketleme akışı.",
+  },
+  supplier_data_collection: {
+    key: "supplier_data_collection",
+    label: "Supplier Data Collection",
+    description: "Tedarikçiden actual veri ve kanıt dokümanı toplama modülü.",
+  },
+  team_collaboration: {
+    key: "team_collaboration",
+    label: "Takım Çalışması",
+    description: "Rol bazlı erişim, görev paylaşımı ve çok kullanıcılı operasyon ekranı.",
+  },
+  api_access: {
+    key: "api_access",
+    label: "API Erişimi",
+    description: "ERP veya iç sistemlerle veri senkronizasyonu için entegrasyon uçları.",
+  },
+};
+
+function getPublicPlanCatalog() {
+  const starterFeatures = [planFeatures.archive_filters];
+  const growthFeatures = [
+    ...starterFeatures,
+    planFeatures.verification_workspace,
+    planFeatures.team_collaboration,
+  ];
+  const proFeatures = [
+    ...growthFeatures,
+    planFeatures.supplier_data_collection,
+    planFeatures.api_access,
+  ];
+
+  return {
+    trial_days: 7,
+    current_access: {
+      role: "company_admin",
+      role_label: "Firma Yöneticisi",
+      active_plan: "growth",
+      trial_status: "active",
+      trial_days_remaining: 7,
+      accessible_feature_keys: proFeatures.map((feature) => feature.key),
+      usage_counters: {
+        reports_per_month: 0,
+        supplier_requests: 0,
+        team_members: 1,
+      },
+      usage_limits: {
+        reports_per_month: 25,
+        supplier_requests: 15,
+        team_members: 10,
+      },
+      can_manage_billing: true,
+    },
+    plans: [
+      {
+        plan_id: "starter",
+        name: "Starter",
+        tagline: "İlk CBAM operasyonunu düzenli hale getiren KOBİ paketi.",
+        monthly_price_eur: 59,
+        usage_limits: {
+          reports_per_month: 15,
+          supplier_requests: 0,
+          team_members: 1,
+        },
+        features: starterFeatures,
+      },
+      {
+        plan_id: "growth",
+        name: "Growth",
+        tagline: "İç inceleme ve ekip koordinasyonunu yöneten büyüyen ihracatçılar için.",
+        monthly_price_eur: 229,
+        usage_limits: {
+          reports_per_month: 75,
+          supplier_requests: 0,
+          team_members: 5,
+        },
+        features: growthFeatures,
+        recommended: true,
+      },
+      {
+        plan_id: "pro",
+        name: "Pro",
+        tagline: "Çok tesisli yapı, tedarikçi veri toplama ve ileri entegrasyon seviyesi.",
+        monthly_price_eur: 599,
+        usage_limits: {
+          reports_per_month: 250,
+          supplier_requests: 100,
+          team_members: 20,
+        },
+        features: proFeatures,
+      },
+    ],
+  };
 }
 
 function UsageMeter({ label, used = 0, limit = 0 }) {
@@ -201,53 +292,6 @@ function ArchiveView({ shipments, loading, error, locale }) {
                         : t(locale, "PDF'i Yeniden İndir", "Download PDF Again")}
                     </button>
                   </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function CoefficientsView({ coefficients, loading, error, locale }) {
-  return (
-    <div className="panel p-6">
-      <div className="text-sm font-semibold text-slate-500">{t(locale, "Katsayılar", "Coefficients")}</div>
-      <h2 className="mt-1 text-2xl font-extrabold text-ink">{t(locale, "Canlı varsayılan değer kataloğu", "Live default values catalog")}</h2>
-      <p className="mt-2 max-w-3xl text-sm text-slate-600">
-        {t(
-          locale,
-          "Bu ekran backend’deki referans değer tablosundan beslenir ve hesap motorunun kullandığı default benchmark’ları gösterir.",
-          "This screen is fed by the backend reference table and shows the default benchmarks used by the calculation engine.",
-        )}
-      </p>
-      {loading ? <p className="mt-4 text-sm text-slate-600">{t(locale, "Katsayılar yükleniyor...", "Loading coefficients...")}</p> : null}
-      {!loading && error ? <p className="mt-4 text-sm font-medium text-clay">{error}</p> : null}
-      {!loading && !error && coefficients.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-600">{t(locale, "Henüz katsayı kaydı bulunmuyor.", "No coefficient records yet.")}</p>
-      ) : null}
-      {!loading && coefficients.length > 0 ? (
-        <div className="mt-6 overflow-x-auto">
-          <table className="min-w-full text-left">
-            <thead>
-              <tr className="border-b border-slate-200 text-sm text-slate-500">
-                <th className="pb-3 font-semibold">{t(locale, "CN Kodu", "CN Code")}</th>
-                <th className="pb-3 font-semibold">{t(locale, "Sektör", "Sector")}</th>
-                <th className="pb-3 font-semibold">{t(locale, "Menşe", "Origin")}</th>
-                <th className="pb-3 font-semibold">{t(locale, "Rota", "Route")}</th>
-                <th className="pb-3 font-semibold">{t(locale, "Toplam Değer", "Total Value")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {coefficients.map((row) => (
-                <tr key={`${row.cn_code}-${row.origin_country}-${row.production_route}`} className="border-b border-slate-100 text-sm text-slate-700">
-                  <td className="py-4 font-semibold">{row.cn_code}</td>
-                  <td className="py-4">{getSectorLabel(row.sector)}</td>
-                  <td className="py-4">{row.origin_country}</td>
-                  <td className="py-4">{getRouteLabel(row.production_route)}</td>
-                  <td className="py-4">{row.specific_total_emissions_tco2_per_ton}</td>
                 </tr>
               ))}
             </tbody>
@@ -463,6 +507,32 @@ function SettingsView({ planCatalog, loading, error, locale }) {
   );
 }
 
+function AuthRequiredView({ locale, onSignUp, onLogin }) {
+  return (
+    <div className="panel p-6">
+      <div className="text-sm font-semibold text-slate-500">{t(locale, "Uyum Akışı", "Workflow")}</div>
+      <h2 className="mt-1 text-2xl font-extrabold text-ink">
+        {t(locale, "CBAM uyum kaydı oluşturmak için giriş yapın", "Sign in to create a CBAM compliance record")}
+      </h2>
+      <p className="mt-2 max-w-2xl text-sm text-slate-600">
+        {t(
+          locale,
+          "Kayıtlar ve PDF beyanları çalışma alanınıza bağlanır; bu yüzden rapor akışı hesap açtıktan sonra başlar.",
+          "Records and declaration PDFs are tied to your workspace, so the workflow starts after authentication.",
+        )}
+      </p>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <button type="button" className="btn-primary" onClick={onSignUp}>
+          {t(locale, "Hesap Oluştur", "Create Account")}
+        </button>
+        <button type="button" className="btn-secondary" onClick={onLogin}>
+          {t(locale, "Giriş Yap", "Log In")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [activeView, setActiveView] = useState("dashboard");
   const [locale, setLocale] = useState("tr");
@@ -471,14 +541,15 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [shipments, setShipments] = useState([]);
-  const [coefficients, setCoefficients] = useState([]);
   const [planCatalog, setPlanCatalog] = useState(null);
   const [loadingShipments, setLoadingShipments] = useState(false);
-  const [loadingCoefficients, setLoadingCoefficients] = useState(true);
   const [loadingPlans, setLoadingPlans] = useState(false);
   const [shipmentsError, setShipmentsError] = useState("");
-  const [coefficientsError, setCoefficientsError] = useState("");
   const [plansError, setPlansError] = useState("");
+
+  const handleChangeView = useCallback((viewId) => {
+    setActiveView(validViewIds.has(viewId) ? viewId : "dashboard");
+  }, []);
 
   const loadShipments = useCallback(async () => {
     try {
@@ -493,19 +564,6 @@ function App() {
     }
   }, []);
 
-  const loadCoefficients = useCallback(async () => {
-    try {
-      setLoadingCoefficients(true);
-      setCoefficientsError("");
-      const coefficientData = await listDefaultValues();
-      setCoefficients(coefficientData);
-    } catch (error) {
-      setCoefficientsError(error.message || "Katsayı kataloğu yüklenemedi.");
-    } finally {
-      setLoadingCoefficients(false);
-    }
-  }, []);
-
   const loadPlans = useCallback(async () => {
     try {
       setLoadingPlans(true);
@@ -513,7 +571,8 @@ function App() {
       const planData = await listPlans();
       setPlanCatalog(planData);
     } catch (error) {
-      setPlansError(error.message || "Plan kataloğu yüklenemedi.");
+      setPlanCatalog(getPublicPlanCatalog());
+      setPlansError("");
     } finally {
       setLoadingPlans(false);
     }
@@ -521,16 +580,15 @@ function App() {
 
   const loadUserData = useCallback(() => {
     loadShipments();
-    loadCoefficients();
     loadPlans();
-  }, [loadShipments, loadCoefficients, loadPlans]);
+  }, [loadShipments, loadPlans]);
 
   // Restore session from stored token on mount
   useEffect(() => {
     const token = getToken();
     if (!token) {
       setSessionLoading(false);
-      loadCoefficients();
+      loadPlans();
       return;
     }
     getMe()
@@ -544,7 +602,7 @@ function App() {
       .finally(() => {
         setSessionLoading(false);
       });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loadPlans, loadUserData]);
 
   const liveTrend = useMemo(() => {
     if (shipments.length === 0) {
@@ -600,24 +658,36 @@ function App() {
   }, []);
 
   const renderView = () => {
+    if (!validViewIds.has(activeView)) {
+      return (
+        <DashboardHome
+          trendData={liveTrend}
+          shipments={shipments}
+          plans={planCatalog?.plans || []}
+          loading={loadingShipments}
+          error={shipmentsError}
+          workspaceAccess={currentWorkspaceAccess}
+          locale={locale}
+          onStartReport={() => openAuth("signup")}
+          onRequestQuote={handleRequestQuote}
+        />
+      );
+    }
+
     switch (activeView) {
       case "yeni-rapor":
         if (!currentUser) {
-          openAuth("signup");
-          return null;
+          return (
+            <AuthRequiredView
+              locale={locale}
+              onSignUp={() => openAuth("signup")}
+              onLogin={() => openAuth("login")}
+            />
+          );
         }
         return <ReportWizard onShipmentCreated={loadShipments} locale={locale} />;
       case "arsiv":
         return <ArchiveView shipments={shipments} loading={loadingShipments} error={shipmentsError} locale={locale} />;
-      case "katsayilar":
-        return (
-          <CoefficientsView
-            coefficients={coefficients}
-            loading={loadingCoefficients}
-            error={coefficientsError}
-            locale={locale}
-          />
-        );
       case "ayarlar":
         return <SettingsView planCatalog={planCatalog} loading={loadingPlans} error={plansError} locale={locale} />;
       default:
@@ -642,7 +712,7 @@ function App() {
       <div className="mx-auto grid max-w-[1600px] gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <Sidebar
           activeView={activeView}
-          onChangeView={setActiveView}
+          onChangeView={handleChangeView}
           workspaceAccess={currentWorkspaceAccess}
           locale={locale}
         />

@@ -15,7 +15,6 @@ function Topbar({
     dashboard: t(locale, "CBAM Uyum Sürecinizi Yönetin ve Riskinizi Görün", "Manage Your CBAM Process and See Your Risk"),
     "yeni-rapor": t(locale, "Uyum Akışı", "Workflow"),
     arsiv: t(locale, "Arşiv", "Archive"),
-    katsayilar: t(locale, "Katsayılar", "Coefficients"),
     ayarlar: t(locale, "Plan ve Yetkilendirme", "Plans and Access"),
   };
 
@@ -27,7 +26,7 @@ function Topbar({
     <header className="panel mb-6 flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex flex-col gap-1">
         <BrandLogo compact locale={locale} />
-        <p className="text-sm font-semibold text-slate-600">{titleMap[activeView]}</p>
+        <p className="text-sm font-semibold text-slate-600">{titleMap[activeView] || titleMap.dashboard}</p>
         {currentUser && workspaceAccess ? (
           <div className="inline-flex w-fit items-center rounded-full bg-[#0E4FAF]/8 px-3 py-0.5 text-xs font-semibold text-[#0E4FAF]">
             {workspaceAccess.trial_status === "active"
@@ -68,7 +67,7 @@ function Topbar({
               {t(locale, "Giriş Yap", "Login")}
             </button>
             <button type="button" onClick={onSignUp} className="btn-primary">
-              {t(locale, "Üye Ol", "Sign Up")}
+              {t(locale, "Hemen Başla", "Start Now")}
             </button>
           </>
         )}

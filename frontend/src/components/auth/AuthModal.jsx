@@ -197,7 +197,7 @@ function AuthModal({
             <div className="mt-1 text-xl font-extrabold text-ink">
               {mode === "login"
                 ? t(locale, "Hesabınıza giriş yapın", "Log in to your workspace")
-                : t(locale, "Hızlı kayıt ile ücretsiz başlayın", "Start free with a quick sign up")}
+                : t(locale, "Hemen Başla", "Start Now")}
             </div>
           </div>
           <button
@@ -499,7 +499,7 @@ function AuthModal({
                     ? t(locale, "Kaydediliyor...", "Saving...")
                     : step === 1
                       ? t(locale, "Devam Et", "Continue")
-                      : t(locale, "Ücretsiz Denemeyi Başlat", "Start Free Trial")}
+                      : t(locale, "Hemen Başla", "Start Now")}
                 </button>
               </div>
               {authError && step === 2 ? (

@@ -2,7 +2,6 @@ export const menuItems = [
   { id: "dashboard", label: "Genel Bakış", hint: "Durum özeti" },
   { id: "yeni-rapor", label: "Uyum Akışı", hint: "CBAM sürecini başlat" },
   { id: "arsiv", label: "Arşiv", hint: "Geçmiş raporlar" },
-  { id: "katsayilar", label: "Katsayılar", hint: "Varsayılan değerler" },
   { id: "ayarlar", label: "Planlar", hint: "Trial, RBAC ve limitler" },
 ];
 

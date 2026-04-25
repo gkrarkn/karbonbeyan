@@ -2,8 +2,10 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.api.routes.auth import get_current_user
+from app.core.security import decode_access_token
 from app.db.database import shipment_repository
 from app.models.auth import UserRecord
 from app.models.cbam import (
@@ -19,6 +21,7 @@ from app.services.pdf_generator import build_cbam_declaration_pdf
 from app.services.plans import get_plan_catalog
 
 router = APIRouter(tags=["shipments"])
+_optional_bearer = HTTPBearer(auto_error=False)
 
 
 @router.get("/reference/cn-codes/{cn_code}", response_model=CNCodeValidationResult)
@@ -32,8 +35,12 @@ def list_default_values_reference() -> list[DefaultValueRecord]:
 
 
 @router.get("/reference/plans", response_model=PlanCatalogResponse)
-def get_plan_catalog_reference(current_user: UserRecord = Depends(get_current_user)) -> PlanCatalogResponse:
-    return get_plan_catalog(reports_count=shipment_repository.count(user_id=current_user.user_id))
+def get_plan_catalog_reference(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_optional_bearer),
+) -> PlanCatalogResponse:
+    user_id = decode_access_token(credentials.credentials) if credentials else None
+    reports_count = shipment_repository.count(user_id=user_id) if user_id else 0
+    return get_plan_catalog(reports_count=reports_count)
 
 
 @router.post("/shipments", response_model=ShipmentRecord)

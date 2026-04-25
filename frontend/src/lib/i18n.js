@@ -17,7 +17,6 @@ export function getMenuItems(locale) {
       { id: "dashboard", label: "Overview", hint: "Status summary" },
       { id: "yeni-rapor", label: "Workflow", hint: "Start a CBAM process" },
       { id: "arsiv", label: "Archive", hint: "Past reports" },
-      { id: "katsayilar", label: "Coefficients", hint: "Default values" },
       { id: "ayarlar", label: "Plans", hint: "Trial, RBAC and limits" },
     ];
   }
@@ -26,7 +25,6 @@ export function getMenuItems(locale) {
     { id: "dashboard", label: "Genel Bakış", hint: "Durum özeti" },
     { id: "yeni-rapor", label: "Uyum Akışı", hint: "CBAM sürecini başlat" },
     { id: "arsiv", label: "Arşiv", hint: "Geçmiş raporlar" },
-    { id: "katsayilar", label: "Katsayılar", hint: "Varsayılan değerler" },
     { id: "ayarlar", label: "Planlar", hint: "Trial, RBAC ve limitler" },
   ];
 }
