@@ -77,6 +77,16 @@ export async function validateCnCode(cnCode) {
   return response.json();
 }
 
+export async function deleteAllShipments() {
+  const response = await fetch(`${API_BASE_URL}/api/v1/shipments`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+  return response.json();
+}
+
 export async function downloadShipmentPdf(shipmentId) {
   const response = await fetch(`${API_BASE_URL}/api/v1/shipments/${shipmentId}/pdf`);
 

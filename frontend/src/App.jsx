@@ -7,6 +7,7 @@ import Topbar from "./components/layout/Topbar";
 import ReportWizard from "./components/report-wizard/ReportWizard";
 import { emissionTrend } from "./data/mockData";
 import {
+  deleteAllShipments,
   downloadShipmentPdf,
   listDefaultValues,
   listPlans,
@@ -153,7 +154,13 @@ function ArchiveView({ shipments, loading, error, locale }) {
 
       {loading ? <p className="mt-4 text-sm text-slate-600">{t(locale, "Kayıtlar yükleniyor...", "Loading records...")}</p> : null}
       {!loading && error ? <p className="mt-4 text-sm font-medium text-clay">{error}</p> : null}
-      {!loading && filteredShipments.length === 0 ? (
+      {!loading && shipments.length === 0 ? (
+        <div className="mt-10 flex flex-col items-center gap-3 text-center">
+          <div className="text-4xl">📂</div>
+          <p className="text-base font-semibold text-slate-700">{t(locale, "Henüz kayıt yok", "No records yet")}</p>
+          <p className="text-sm text-slate-500">{t(locale, "İlk CBAM raporunuzu oluşturmak için 'Yeni Rapor' bölümüne gidin.", "Go to 'New Report' to create your first CBAM declaration.")}</p>
+        </div>
+      ) : !loading && filteredShipments.length === 0 ? (
         <p className="mt-4 text-sm text-slate-600">{t(locale, "Filtrelere uyan kayıt bulunmuyor.", "No records match the selected filters.")}</p>
       ) : null}
       {!loading && filteredShipments.length > 0 ? (
@@ -248,7 +255,7 @@ function CoefficientsView({ coefficients, loading, error, locale }) {
   );
 }
 
-function SettingsView({ planCatalog, loading, error, locale }) {
+function SettingsView({ planCatalog, loading, error, locale, onClearAll }) {
   if (loading) {
     return <div className="panel p-6 text-sm text-slate-600">{t(locale, "Plan ve yetkilendirme yükleniyor...", "Loading plans and access rules...")}</div>;
   }
@@ -396,6 +403,23 @@ function SettingsView({ planCatalog, loading, error, locale }) {
           </div>
         </div>
       </div>
+
+      {onClearAll && (
+        <div className="panel border border-clay/20 p-6">
+          <div className="text-sm font-semibold text-clay">Veri Yönetimi</div>
+          <h3 className="mt-1 text-xl font-bold text-ink">Demo kayıtları temizle</h3>
+          <p className="mt-2 text-sm text-slate-600">
+            Test sırasında oluşturulan tüm sevkiyat kayıtlarını kalıcı olarak siler. Bu işlem geri alınamaz.
+          </p>
+          <button
+            type="button"
+            onClick={onClearAll}
+            className="mt-4 rounded-xl bg-clay px-5 py-2.5 text-sm font-semibold text-white hover:bg-clay/80 transition"
+          >
+            Tüm kayıtları sil
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -487,6 +511,16 @@ function App() {
     };
   }, [locale, planCatalog, workspaceProfile]);
 
+  const handleClearAll = useCallback(async () => {
+    if (!window.confirm("Tüm sevkiyat kayıtları silinecek. Emin misiniz?")) return;
+    try {
+      await deleteAllShipments();
+      setShipments([]);
+    } catch (err) {
+      alert(err.message || "Silme işlemi başarısız.");
+    }
+  }, []);
+
   const openAuth = useCallback((mode) => {
     setAuthMode(mode);
     setAuthModalOpen(true);
@@ -547,7 +581,7 @@ function App() {
           />
         );
       case "ayarlar":
-        return <SettingsView planCatalog={planCatalog} loading={loadingPlans} error={plansError} locale={locale} />;
+        return <SettingsView planCatalog={planCatalog} loading={loadingPlans} error={plansError} locale={locale} onClearAll={handleClearAll} />;
       default:
         return (
           <DashboardHome

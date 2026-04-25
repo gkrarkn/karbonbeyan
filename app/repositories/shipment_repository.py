@@ -104,6 +104,24 @@ class ShipmentRepository:
             ).scalars()
             return [self._to_record(row) for row in rows]
 
+    def delete(self, shipment_id: str) -> bool:
+        with self._session_factory() as session:
+            row = session.get(ShipmentORM, shipment_id)
+            if not row:
+                return False
+            session.delete(row)
+            session.commit()
+            return True
+
+    def delete_all(self) -> int:
+        with self._session_factory() as session:
+            rows = session.execute(select(ShipmentORM)).scalars().all()
+            count = len(rows)
+            for row in rows:
+                session.delete(row)
+            session.commit()
+            return count
+
     def list_default_values(self) -> list[DefaultValueRecord]:
         with self._session_factory() as session:
             rows = session.execute(

@@ -63,6 +63,20 @@ def get_shipment(shipment_id: str) -> ShipmentRecord:
     return record
 
 
+@router.delete("/shipments", status_code=200)
+def delete_all_shipments() -> dict:
+    count = shipment_repository.delete_all()
+    return {"deleted": count}
+
+
+@router.delete("/shipments/{shipment_id}", status_code=200)
+def delete_shipment(shipment_id: str) -> dict:
+    deleted = shipment_repository.delete(shipment_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Shipment not found")
+    return {"deleted": 1}
+
+
 @router.get("/shipments/{shipment_id}/pdf")
 def download_shipment_pdf(shipment_id: str) -> FileResponse:
     record = shipment_repository.get(shipment_id)
