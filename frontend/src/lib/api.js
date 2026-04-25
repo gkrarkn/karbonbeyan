@@ -1,4 +1,20 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+function resolveApiBaseUrl() {
+  const configuredUrl = import.meta.env.VITE_API_BASE_URL;
+  const host = typeof window !== "undefined" ? window.location.hostname : "";
+  const isLocalHost = host === "localhost" || host === "127.0.0.1";
+
+  if (configuredUrl && !configuredUrl.includes("localhost") && !configuredUrl.includes("127.0.0.1")) {
+    return configuredUrl;
+  }
+
+  if (isLocalHost) {
+    return configuredUrl || "http://localhost:8000";
+  }
+
+  return "https://api.karbonbeyan.com";
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 const APP_NAME = import.meta.env.VITE_APP_NAME || "KarbonBeyan";
 const TOKEN_KEY = "kb_token";
 
@@ -39,10 +55,26 @@ async function parseError(response) {
   }
 }
 
+function getNetworkErrorMessage(error) {
+  if (error instanceof TypeError) {
+    return "API bağlantısı kurulamadı. Lütfen birkaç saniye sonra tekrar deneyin.";
+  }
+
+  return error?.message || "İstek başarısız oldu.";
+}
+
+async function apiFetch(url, options) {
+  try {
+    return await fetch(url, options);
+  } catch (error) {
+    throw new Error(getNetworkErrorMessage(error));
+  }
+}
+
 // ── Auth ──────────────────────────────────────────────────────────────────
 
 export async function registerUser({ email, password, full_name = "", company_name = "" }) {
-  const response = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
+  const response = await apiFetch(`${API_BASE_URL}/api/v1/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password, full_name, company_name }),
@@ -52,7 +84,7 @@ export async function registerUser({ email, password, full_name = "", company_na
 }
 
 export async function loginUser({ email, password }) {
-  const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+  const response = await apiFetch(`${API_BASE_URL}/api/v1/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
@@ -62,7 +94,7 @@ export async function loginUser({ email, password }) {
 }
 
 export async function getMe() {
-  const response = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+  const response = await apiFetch(`${API_BASE_URL}/api/v1/auth/me`, {
     headers: { ...authHeaders() },
   });
   if (!response.ok) throw new Error(await parseError(response));
@@ -72,7 +104,7 @@ export async function getMe() {
 // ── Shipments ─────────────────────────────────────────────────────────────
 
 export async function createShipment(payload) {
-  const response = await fetch(`${API_BASE_URL}/api/v1/shipments`, {
+  const response = await apiFetch(`${API_BASE_URL}/api/v1/shipments`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify(payload),
@@ -82,7 +114,7 @@ export async function createShipment(payload) {
 }
 
 export async function listShipments() {
-  const response = await fetch(`${API_BASE_URL}/api/v1/shipments`, {
+  const response = await apiFetch(`${API_BASE_URL}/api/v1/shipments`, {
     headers: { ...authHeaders() },
   });
   if (!response.ok) throw new Error(await parseError(response));
@@ -90,13 +122,13 @@ export async function listShipments() {
 }
 
 export async function listDefaultValues() {
-  const response = await fetch(`${API_BASE_URL}/api/v1/reference/default-values`);
+  const response = await apiFetch(`${API_BASE_URL}/api/v1/reference/default-values`);
   if (!response.ok) throw new Error(await parseError(response));
   return response.json();
 }
 
 export async function listPlans() {
-  const response = await fetch(`${API_BASE_URL}/api/v1/reference/plans`, {
+  const response = await apiFetch(`${API_BASE_URL}/api/v1/reference/plans`, {
     headers: { ...authHeaders() },
   });
   if (!response.ok) throw new Error(await parseError(response));
@@ -104,13 +136,13 @@ export async function listPlans() {
 }
 
 export async function validateCnCode(cnCode) {
-  const response = await fetch(`${API_BASE_URL}/api/v1/reference/cn-codes/${cnCode}`);
+  const response = await apiFetch(`${API_BASE_URL}/api/v1/reference/cn-codes/${cnCode}`);
   if (!response.ok) throw new Error(await parseError(response));
   return response.json();
 }
 
 export async function downloadShipmentPdf(shipmentId) {
-  const response = await fetch(`${API_BASE_URL}/api/v1/shipments/${shipmentId}/pdf`, {
+  const response = await apiFetch(`${API_BASE_URL}/api/v1/shipments/${shipmentId}/pdf`, {
     headers: { ...authHeaders() },
   });
   if (!response.ok) throw new Error(await parseError(response));
