@@ -15,9 +15,18 @@ import {
   listShipments,
   setToken,
 } from "./lib/api";
-import { t, translateComplianceStatus, translateConfidence } from "./lib/i18n";
+import { resolveLocale, t, translateComplianceStatus, translateConfidence } from "./lib/i18n";
 
 const validViewIds = new Set(["dashboard", "yeni-rapor", "arsiv", "ayarlar"]);
+const LOCALE_KEY = "kb_locale";
+
+function getInitialLocale() {
+  if (typeof window === "undefined") {
+    return "tr";
+  }
+
+  return resolveLocale(window.localStorage.getItem(LOCALE_KEY) || "tr");
+}
 
 const sectorLabels = {
   iron_steel: "Demir-Çelik",
@@ -543,7 +552,7 @@ function AuthRequiredView({ locale, onSignUp, onLogin }) {
 
 function App() {
   const [activeView, setActiveView] = useState("dashboard");
-  const [locale, setLocale] = useState("tr");
+  const [locale, setLocale] = useState(getInitialLocale);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState("signup");
   const [currentUser, setCurrentUser] = useState(null);
@@ -651,6 +660,10 @@ function App() {
     setPlanCatalog(null);
     setActiveView("dashboard");
   }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(LOCALE_KEY, resolveLocale(locale));
+  }, [locale]);
 
   const handleRequestQuote = useCallback((payload = {}) => {
     const subject = encodeURIComponent("KarbonBeyan Kurumsal Teklif Talebi");

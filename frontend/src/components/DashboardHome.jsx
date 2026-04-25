@@ -1,4 +1,4 @@
-import { t, translateComplianceStatus, translateConfidence, translateRole } from "../lib/i18n";
+import { resolveLocale, t, translateComplianceStatus, translateConfidence, translateRole } from "../lib/i18n";
 import BrandLogo from "./brand/BrandLogo";
 import EmissionsChart from "./charts/EmissionsChart";
 
@@ -91,6 +91,7 @@ function DashboardHome({
   onStartReport,
   onRequestQuote,
 }) {
+  const activeLocale = resolveLocale(locale);
   const hasLiveShipments = shipments.length > 0;
   const pendingShipments = shipments.filter(
     (shipment) => shipment.payload.verification.verification_status === "pending",
@@ -207,9 +208,21 @@ function DashboardHome({
     },
   ];
   const priceDisplayByPlan = {
-    starter: locale === "en" ? { currency: "USD", amount: 69 } : null,
-    growth: locale === "en" ? { currency: "USD", amount: 269 } : null,
+    starter: activeLocale === "en" ? { currency: "USD", amount: 69 } : null,
+    growth: activeLocale === "en" ? { currency: "USD", amount: 269 } : null,
   };
+  const howItWorksLabel = activeLocale === "en" ? "How It Works" : "Nasıl Çalışır";
+  const outputLabel = activeLocale === "en" ? "Output" : "Çıktı";
+  const reportTitle = activeLocale === "en" ? "What Does a CBAM Report Look Like?" : "CBAM Raporu Nasıl Görünüyor?";
+  const reportBody = activeLocale === "en"
+    ? "See missing data, risky records and estimated calculations in one report."
+    : "Eksik verileri, riskli kayıtları ve tahmini hesaplamaları tek raporda görün.";
+  const reportCta = activeLocale === "en" ? "Open Report" : "Raporu Aç";
+  const reportCtaHint = activeLocale === "en" ? "You can review it in 1 minute" : "1 dakika içinde inceleyebilirsiniz";
+  const reportBadge = activeLocale === "en" ? "Real report output" : "Gerçek rapor çıktısı";
+  const howItWorksTitle = activeLocale === "en"
+    ? "Cost and risk visibility in three steps"
+    : "Üç adımda maliyet ve risk görünürlüğü";
 
   return (
     <div className="space-y-6">
@@ -260,7 +273,7 @@ function DashboardHome({
                 }
                 className="rounded-2xl border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
               >
-                {t(locale, "Nasıl Çalışır", "How It Works")}
+                {howItWorksLabel}
               </button>
             </div>
             <div className="mt-4 inline-flex rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white/85">
@@ -303,9 +316,9 @@ function DashboardHome({
       </section>
 
       <section id="how-it-works" className="panel p-6">
-        <div className="text-sm font-semibold text-[#0E4FAF]">{t(locale, "Nasıl Çalışır", "How It Works")}</div>
+        <div className="text-sm font-semibold text-[#0E4FAF]">{howItWorksLabel}</div>
         <h3 className="mt-2 text-3xl font-extrabold text-ink">
-          {t(locale, "Üç adımda maliyet ve risk görünürlüğü", "Cost and risk visibility in three steps")}
+          {howItWorksTitle}
         </h3>
         <div className="mt-6 grid gap-4 xl:grid-cols-3">
           {[
@@ -335,27 +348,21 @@ function DashboardHome({
 
       <section className="panel grid gap-6 overflow-hidden p-6 xl:grid-cols-[0.9fr_1.1fr]">
         <div>
-          <div className="text-sm font-semibold text-[#0E4FAF]">{t(locale, "Çıktı", "Output")}</div>
+          <div className="text-sm font-semibold text-[#0E4FAF]">{outputLabel}</div>
           <h3 className="mt-2 text-3xl font-extrabold text-ink">
-            {t(locale, "CBAM Raporu Nasıl Görünüyor?", "What Does a CBAM Report Look Like?")}
+            {reportTitle}
           </h3>
-          <p className="mt-3 text-sm leading-6 text-slate-600">
-            {t(
-              locale,
-              "Eksik verileri, riskli kayıtları ve tahmini hesaplamaları tek raporda görün.",
-              "See missing data, risky records and estimated calculations in one report.",
-            )}
-          </p>
+          <p className="mt-3 text-sm leading-6 text-slate-600">{reportBody}</p>
           <button type="button" onClick={onStartReport} className="btn-primary mt-6">
-            {t(locale, "Raporu Aç", "Open Report")}
+            {reportCta}
           </button>
           <p className="mt-3 text-xs font-semibold text-slate-500">
-            {t(locale, "1 dakika içinde inceleyebilirsiniz", "You can review it in 1 minute")}
+            {reportCtaHint}
           </p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 inline-flex rounded-full bg-pine px-3 py-1 text-xs font-semibold text-white">
-            {t(locale, "Gerçek rapor çıktısı", "Real report output")}
+            {reportBadge}
           </div>
           <div className="space-y-3 blur-[1.2px]">
             <div className="h-4 w-48 rounded-full bg-slate-200" />
