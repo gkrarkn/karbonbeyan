@@ -337,20 +337,26 @@ function DashboardHome({
         <div>
           <div className="text-sm font-semibold text-[#0E4FAF]">{t(locale, "Çıktı", "Output")}</div>
           <h3 className="mt-2 text-3xl font-extrabold text-ink">
-            {t(locale, "Örnek Raporu Görün", "See a Sample Report")}
+            {t(locale, "CBAM Raporu Nasıl Görünüyor?", "What Does a CBAM Report Look Like?")}
           </h3>
           <p className="mt-3 text-sm leading-6 text-slate-600">
             {t(
               locale,
-              "KarbonBeyan, verilerinizi yapılandırılmış bir rapora dönüştürerek eksikleri ve riskleri görünür hale getirir.",
-              "KarbonBeyan turns your data into a structured report that makes missing fields and risks visible.",
+              "Eksik verileri, riskli kayıtları ve tahmini hesaplamaları tek raporda görün.",
+              "See missing data, risky records and estimated calculations in one report.",
             )}
           </p>
           <button type="button" onClick={onStartReport} className="btn-primary mt-6">
-            {t(locale, "Örnek Raporu İncele", "Review Sample Report")}
+            {t(locale, "Raporu Aç", "Open Report")}
           </button>
+          <p className="mt-3 text-xs font-semibold text-slate-500">
+            {t(locale, "1 dakika içinde inceleyebilirsiniz", "You can review it in 1 minute")}
+          </p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 inline-flex rounded-full bg-pine px-3 py-1 text-xs font-semibold text-white">
+            {t(locale, "Gerçek rapor çıktısı", "Real report output")}
+          </div>
           <div className="space-y-3 blur-[1.2px]">
             <div className="h-4 w-48 rounded-full bg-slate-200" />
             <div className="grid gap-3 sm:grid-cols-3">

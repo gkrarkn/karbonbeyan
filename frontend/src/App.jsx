@@ -676,7 +676,7 @@ function App() {
           error={shipmentsError}
           workspaceAccess={currentWorkspaceAccess}
           locale={locale}
-          onStartReport={() => openAuth("signup")}
+          onStartReport={() => (currentUser ? setActiveView("yeni-rapor") : openAuth("signup"))}
           onRequestQuote={handleRequestQuote}
         />
       );
@@ -708,7 +708,7 @@ function App() {
             error={shipmentsError}
             workspaceAccess={currentWorkspaceAccess}
             locale={locale}
-            onStartReport={() => openAuth("signup")}
+            onStartReport={() => (currentUser ? setActiveView("yeni-rapor") : openAuth("signup"))}
             onRequestQuote={handleRequestQuote}
           />
         );
