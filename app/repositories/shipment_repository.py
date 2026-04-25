@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import create_engine, func, select
+from sqlalchemy import create_engine, func, select, text
 from sqlalchemy.orm import sessionmaker
 
 from app.db.models import Base, DefaultValueORM, ShipmentORM
@@ -15,6 +15,7 @@ from app.services.default_values import load_default_values
 
 class ShipmentRepository:
     def __init__(self, database_url: str) -> None:
+        self._database_url = database_url
         connect_args = {"check_same_thread": False} if database_url.startswith("sqlite") else {}
         self._engine = create_engine(database_url, future=True, connect_args=connect_args)
         self._session_factory = sessionmaker(
@@ -24,7 +25,23 @@ class ShipmentRepository:
             future=True,
         )
         Base.metadata.create_all(self._engine)
+        self._migrate()
         self._seed_default_values()
+
+    def _migrate(self) -> None:
+        with self._engine.connect() as conn:
+            try:
+                if self._database_url.startswith("sqlite"):
+                    result = conn.execute(text("PRAGMA table_info(shipments)"))
+                    columns = [row[1] for row in result.fetchall()]
+                    if "user_id" not in columns:
+                        conn.execute(text("ALTER TABLE shipments ADD COLUMN user_id VARCHAR(64)"))
+                        conn.commit()
+                else:
+                    conn.execute(text("ALTER TABLE shipments ADD COLUMN IF NOT EXISTS user_id VARCHAR(64)"))
+                    conn.commit()
+            except Exception:
+                conn.rollback()
 
     @staticmethod
     def _to_record(row: ShipmentORM) -> ShipmentRecord:
@@ -78,11 +95,12 @@ class ShipmentRepository:
                 )
             session.commit()
 
-    def save(self, record: ShipmentRecord) -> ShipmentRecord:
+    def save(self, record: ShipmentRecord, user_id: str) -> ShipmentRecord:
         with self._session_factory() as session:
             session.merge(
                 ShipmentORM(
                     shipment_id=record.shipment_id,
+                    user_id=user_id,
                     created_at=record.created_at,
                     payload_json=record.payload.model_dump_json(),
                     calculation_json=record.calculation.model_dump_json(),
@@ -92,34 +110,43 @@ class ShipmentRepository:
             session.commit()
         return record
 
-    def get(self, shipment_id: str) -> ShipmentRecord | None:
+    def get(self, shipment_id: str, user_id: str) -> ShipmentRecord | None:
         with self._session_factory() as session:
             row = session.get(ShipmentORM, shipment_id)
-            return self._to_record(row) if row else None
+            if not row or row.user_id != user_id:
+                return None
+            return self._to_record(row)
 
-    def count(self) -> int:
+    def count(self, user_id: str | None = None) -> int:
         with self._session_factory() as session:
-            return session.scalar(select(func.count()).select_from(ShipmentORM)) or 0
+            query = select(func.count()).select_from(ShipmentORM)
+            if user_id:
+                query = query.where(ShipmentORM.user_id == user_id)
+            return session.scalar(query) or 0
 
-    def list(self) -> list[ShipmentRecord]:
+    def list(self, user_id: str) -> list[ShipmentRecord]:
         with self._session_factory() as session:
             rows = session.execute(
-                select(ShipmentORM).order_by(ShipmentORM.created_at.desc())
+                select(ShipmentORM)
+                .where(ShipmentORM.user_id == user_id)
+                .order_by(ShipmentORM.created_at.desc())
             ).scalars()
             return [self._to_record(row) for row in rows]
 
-    def delete(self, shipment_id: str) -> bool:
+    def delete(self, shipment_id: str, user_id: str) -> bool:
         with self._session_factory() as session:
             row = session.get(ShipmentORM, shipment_id)
-            if not row:
+            if not row or row.user_id != user_id:
                 return False
             session.delete(row)
             session.commit()
             return True
 
-    def delete_all(self) -> int:
+    def delete_all(self, user_id: str) -> int:
         with self._session_factory() as session:
-            rows = session.execute(select(ShipmentORM)).scalars().all()
+            rows = session.execute(
+                select(ShipmentORM).where(ShipmentORM.user_id == user_id)
+            ).scalars().all()
             count = len(rows)
             for row in rows:
                 session.delete(row)

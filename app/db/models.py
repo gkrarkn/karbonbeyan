@@ -10,10 +10,22 @@ class Base(DeclarativeBase):
     pass
 
 
+class UserORM(Base):
+    __tablename__ = "users"
+
+    user_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    full_name: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    company_name: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+
 class ShipmentORM(Base):
     __tablename__ = "shipments"
 
     shipment_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     payload_json: Mapped[str] = mapped_column(Text, nullable=False)
     calculation_json: Mapped[str] = mapped_column(Text, nullable=False)

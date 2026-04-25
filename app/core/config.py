@@ -25,6 +25,7 @@ class Settings:
     database_url: str = _normalize_database_url(
         os.getenv("DATABASE_URL", "sqlite:///./karbonbeyan.db")
     )
+    secret_key: str = os.getenv("SECRET_KEY", "dev-secret-change-in-production-please")
     allowed_origins: list[str] = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:

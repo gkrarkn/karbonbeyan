@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { loginUser, registerUser } from "../../lib/api";
 import { t } from "../../lib/i18n";
 
 const sectorOptions = [
@@ -82,23 +83,23 @@ function AuthModal({
   locale,
   onClose,
   onModeChange,
-  onLoginSuccess,
-  onSignupSuccess,
+  onAuthSuccess,
 }) {
   const [loginForm, setLoginForm] = useState(initialLoginForm);
   const [signupForm, setSignupForm] = useState(initialSignupForm);
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [authError, setAuthError] = useState("");
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
-
+    if (!open) return;
     setLoginForm(initialLoginForm);
     setSignupForm(initialSignupForm);
     setStep(1);
     setSubmitted(false);
+    setSubmitting(false);
+    setAuthError("");
   }, [open, mode]);
 
   const localizedSectorOptions = useMemo(
@@ -146,29 +147,43 @@ function AuthModal({
     setSignupForm((current) => ({ ...current, [field]: event.target.value }));
   };
 
-  const handleLoginSubmit = (event) => {
+  const handleLoginSubmit = async (event) => {
     event.preventDefault();
-    onLoginSuccess?.({
-      email: loginForm.email,
-    });
-    onClose?.();
+    setSubmitting(true);
+    setAuthError("");
+    try {
+      const result = await loginUser({ email: loginForm.email, password: loginForm.password });
+      onAuthSuccess?.({ token: result.access_token, user: result.user });
+    } catch (err) {
+      setAuthError(err.message || t(locale, "Giriş başarısız.", "Login failed."));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleSignupContinue = (event) => {
     event.preventDefault();
+    setAuthError("");
     setStep(2);
   };
 
-  const handleSignupSubmit = (event) => {
+  const handleSignupSubmit = async (event) => {
     event.preventDefault();
-    setSubmitted(true);
-    onSignupSuccess?.({
-      full_name: signupForm.fullName,
-      email: signupForm.email,
-      company_name: signupForm.companyName,
-      role_label: t(locale, "Firma Yöneticisi", "Company Admin"),
-      sector: signupForm.sector,
-    });
+    setSubmitting(true);
+    setAuthError("");
+    try {
+      const result = await registerUser({
+        email: signupForm.email,
+        password: signupForm.password,
+        full_name: signupForm.fullName,
+        company_name: signupForm.companyName,
+      });
+      setSubmitted(true);
+      onAuthSuccess?.({ token: result.access_token, user: result.user });
+    } catch (err) {
+      setAuthError(err.message || t(locale, "Kayıt başarısız.", "Registration failed."));
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -242,16 +257,12 @@ function AuthModal({
                   />
                 </ModalField>
               </div>
-              <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-                {t(
-                  locale,
-                  "Bu ilk sürümde giriş ekranı ürün akışını göstermeye odaklanır. Hesaba giriş sonrası doğrudan çalışma alanına geçersiniz.",
-                  "In this first version, the login screen focuses on the product flow. After login, you move directly into the workspace.",
-                )}
-              </div>
+              {authError ? (
+                <p className="rounded-2xl bg-clay/10 px-4 py-3 text-sm font-medium text-clay">{authError}</p>
+              ) : null}
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <button type="submit" className="btn-primary">
-                  {t(locale, "Giriş Yap", "Login")}
+                <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-60">
+                  {submitting ? t(locale, "Giriş yapılıyor...", "Logging in...") : t(locale, "Giriş Yap", "Login")}
                 </button>
                 <button
                   type="button"
@@ -483,10 +494,17 @@ function AuthModal({
                     )}
                   </div>
                 )}
-                <button type="submit" className="btn-primary">
-                  {step === 1 ? t(locale, "Devam Et", "Continue") : t(locale, "Ücretsiz Denemeyi Başlat", "Start Free Trial")}
+                <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-60">
+                  {submitting
+                    ? t(locale, "Kaydediliyor...", "Saving...")
+                    : step === 1
+                      ? t(locale, "Devam Et", "Continue")
+                      : t(locale, "Ücretsiz Denemeyi Başlat", "Start Free Trial")}
                 </button>
               </div>
+              {authError && step === 2 ? (
+                <p className="rounded-2xl bg-clay/10 px-4 py-3 text-sm font-medium text-clay">{authError}</p>
+              ) : null}
             </form>
           )}
         </div>

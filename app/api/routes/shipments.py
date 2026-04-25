@@ -1,9 +1,11 @@
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 
+from app.api.routes.auth import get_current_user
 from app.db.database import shipment_repository
+from app.models.auth import UserRecord
 from app.models.cbam import (
     CNCodeValidationResult,
     DefaultValueRecord,
@@ -30,12 +32,15 @@ def list_default_values_reference() -> list[DefaultValueRecord]:
 
 
 @router.get("/reference/plans", response_model=PlanCatalogResponse)
-def get_plan_catalog_reference() -> PlanCatalogResponse:
-    return get_plan_catalog(reports_count=shipment_repository.count())
+def get_plan_catalog_reference(current_user: UserRecord = Depends(get_current_user)) -> PlanCatalogResponse:
+    return get_plan_catalog(reports_count=shipment_repository.count(user_id=current_user.user_id))
 
 
 @router.post("/shipments", response_model=ShipmentRecord)
-def create_shipment(payload: ShipmentCreate) -> ShipmentRecord:
+def create_shipment(
+    payload: ShipmentCreate,
+    current_user: UserRecord = Depends(get_current_user),
+) -> ShipmentRecord:
     try:
         calculation = calculate_shipment_emissions(payload)
     except ValueError as exc:
@@ -47,39 +52,42 @@ def create_shipment(payload: ShipmentCreate) -> ShipmentRecord:
     )
     pdf_path = build_cbam_declaration_pdf(draft_record)
     record = draft_record.model_copy(update={"declaration_pdf_path": pdf_path})
-    return shipment_repository.save(record)
+    return shipment_repository.save(record, user_id=current_user.user_id)
 
 
 @router.get("/shipments", response_model=list[ShipmentRecord])
-def list_shipments() -> list[ShipmentRecord]:
-    return shipment_repository.list()
+def list_shipments(current_user: UserRecord = Depends(get_current_user)) -> list[ShipmentRecord]:
+    return shipment_repository.list(user_id=current_user.user_id)
 
 
 @router.get("/shipments/{shipment_id}", response_model=ShipmentRecord)
-def get_shipment(shipment_id: str) -> ShipmentRecord:
-    record = shipment_repository.get(shipment_id)
+def get_shipment(
+    shipment_id: str,
+    current_user: UserRecord = Depends(get_current_user),
+) -> ShipmentRecord:
+    record = shipment_repository.get(shipment_id, user_id=current_user.user_id)
     if not record:
         raise HTTPException(status_code=404, detail="Shipment not found")
     return record
 
 
-@router.delete("/shipments", status_code=200)
-def delete_all_shipments() -> dict:
-    count = shipment_repository.delete_all()
-    return {"deleted": count}
-
-
 @router.delete("/shipments/{shipment_id}", status_code=200)
-def delete_shipment(shipment_id: str) -> dict:
-    deleted = shipment_repository.delete(shipment_id)
+def delete_shipment(
+    shipment_id: str,
+    current_user: UserRecord = Depends(get_current_user),
+) -> dict:
+    deleted = shipment_repository.delete(shipment_id, user_id=current_user.user_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Shipment not found")
     return {"deleted": 1}
 
 
 @router.get("/shipments/{shipment_id}/pdf")
-def download_shipment_pdf(shipment_id: str) -> FileResponse:
-    record = shipment_repository.get(shipment_id)
+def download_shipment_pdf(
+    shipment_id: str,
+    current_user: UserRecord = Depends(get_current_user),
+) -> FileResponse:
+    record = shipment_repository.get(shipment_id, user_id=current_user.user_id)
     if not record:
         raise HTTPException(status_code=404, detail="Shipment not found")
 

@@ -7,10 +7,14 @@ import Topbar from "./components/layout/Topbar";
 import ReportWizard from "./components/report-wizard/ReportWizard";
 import { emissionTrend } from "./data/mockData";
 import {
+  clearToken,
   downloadShipmentPdf,
+  getMe,
+  getToken,
   listDefaultValues,
   listPlans,
   listShipments,
+  setToken,
 } from "./lib/api";
 import { t, translateComplianceStatus, translateConfidence } from "./lib/i18n";
 
@@ -464,13 +468,14 @@ function App() {
   const [locale, setLocale] = useState("tr");
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState("signup");
-  const [workspaceProfile, setWorkspaceProfile] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const [shipments, setShipments] = useState([]);
   const [coefficients, setCoefficients] = useState([]);
   const [planCatalog, setPlanCatalog] = useState(null);
-  const [loadingShipments, setLoadingShipments] = useState(true);
+  const [loadingShipments, setLoadingShipments] = useState(false);
   const [loadingCoefficients, setLoadingCoefficients] = useState(true);
-  const [loadingPlans, setLoadingPlans] = useState(true);
+  const [loadingPlans, setLoadingPlans] = useState(false);
   const [shipmentsError, setShipmentsError] = useState("");
   const [coefficientsError, setCoefficientsError] = useState("");
   const [plansError, setPlansError] = useState("");
@@ -514,11 +519,32 @@ function App() {
     }
   }, []);
 
-  useEffect(() => {
+  const loadUserData = useCallback(() => {
     loadShipments();
     loadCoefficients();
     loadPlans();
   }, [loadShipments, loadCoefficients, loadPlans]);
+
+  // Restore session from stored token on mount
+  useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      setSessionLoading(false);
+      loadCoefficients();
+      return;
+    }
+    getMe()
+      .then((user) => {
+        setCurrentUser(user);
+        loadUserData();
+      })
+      .catch(() => {
+        clearToken();
+      })
+      .finally(() => {
+        setSessionLoading(false);
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const liveTrend = useMemo(() => {
     if (shipments.length === 0) {
@@ -531,52 +557,34 @@ function App() {
   }, [shipments]);
 
   const currentWorkspaceAccess = useMemo(() => {
-    if (!planCatalog?.current_access) {
-      return null;
-    }
-
+    if (!planCatalog?.current_access) return null;
     return {
       ...planCatalog.current_access,
-      company_name:
-        workspaceProfile?.company_name ||
-        planCatalog.current_access.company_name ||
-        t(locale, "KarbonBeyan Hesabı", "KarbonBeyan Workspace"),
-      role_label:
-        workspaceProfile?.role_label || planCatalog.current_access.role_label,
+      company_name: currentUser?.company_name || t(locale, "KarbonBeyan Hesabı", "KarbonBeyan Workspace"),
+      role_label: planCatalog.current_access.role_label,
     };
-  }, [locale, planCatalog, workspaceProfile]);
-
+  }, [locale, planCatalog, currentUser]);
 
   const openAuth = useCallback((mode) => {
     setAuthMode(mode);
     setAuthModalOpen(true);
   }, []);
 
-  const handleLoginSuccess = useCallback(
-    (payload = {}) => {
-      setWorkspaceProfile((current) => ({
-        company_name: current?.company_name || t(locale, "KarbonBeyan Hesabı", "KarbonBeyan Workspace"),
-        role_label: current?.role_label || t(locale, "Firma Yöneticisi", "Company Admin"),
-        email: payload.email || current?.email || "",
-      }));
-      setActiveView("dashboard");
-    },
-    [locale],
-  );
+  const handleAuthSuccess = useCallback(({ token, user }) => {
+    setToken(token);
+    setCurrentUser(user);
+    setAuthModalOpen(false);
+    setActiveView("dashboard");
+    loadUserData();
+  }, [loadUserData]);
 
-  const handleSignupSuccess = useCallback(
-    (payload = {}) => {
-      setWorkspaceProfile({
-        company_name: payload.company_name || t(locale, "Yeni Firma", "New Company"),
-        role_label: payload.role_label || t(locale, "Firma Yöneticisi", "Company Admin"),
-        full_name: payload.full_name || "",
-        email: payload.email || "",
-        sector: payload.sector || "",
-      });
-      setActiveView("dashboard");
-    },
-    [locale],
-  );
+  const handleLogout = useCallback(() => {
+    clearToken();
+    setCurrentUser(null);
+    setShipments([]);
+    setPlanCatalog(null);
+    setActiveView("dashboard");
+  }, []);
 
   const handleRequestQuote = useCallback((payload = {}) => {
     const subject = encodeURIComponent("KarbonBeyan Kurumsal Teklif Talebi");
@@ -594,6 +602,10 @@ function App() {
   const renderView = () => {
     switch (activeView) {
       case "yeni-rapor":
+        if (!currentUser) {
+          openAuth("signup");
+          return null;
+        }
         return <ReportWizard onShipmentCreated={loadShipments} locale={locale} />;
       case "arsiv":
         return <ArchiveView shipments={shipments} loading={loadingShipments} error={shipmentsError} locale={locale} />;
@@ -640,6 +652,8 @@ function App() {
             activeView={activeView}
             onLogin={() => openAuth("login")}
             onSignUp={() => openAuth("signup")}
+            onLogout={handleLogout}
+            currentUser={currentUser}
             workspaceAccess={currentWorkspaceAccess}
             locale={locale}
             onLocaleChange={setLocale}
@@ -654,8 +668,7 @@ function App() {
         locale={locale}
         onClose={() => setAuthModalOpen(false)}
         onModeChange={setAuthMode}
-        onLoginSuccess={handleLoginSuccess}
-        onSignupSuccess={handleSignupSuccess}
+        onAuthSuccess={handleAuthSuccess}
       />
     </div>
   );
