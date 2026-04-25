@@ -36,9 +36,25 @@ class ShipmentRepository:
                     columns = [row[1] for row in result.fetchall()]
                     if "user_id" not in columns:
                         conn.execute(text("ALTER TABLE shipments ADD COLUMN user_id VARCHAR(64)"))
-                        conn.commit()
+
+                    result = conn.execute(text("PRAGMA table_info(users)"))
+                    user_columns = [row[1] for row in result.fetchall()]
+                    if user_columns:
+                        if "hashed_password" not in user_columns:
+                            conn.execute(text("ALTER TABLE users ADD COLUMN hashed_password VARCHAR(255) NOT NULL DEFAULT ''"))
+                        if "full_name" not in user_columns:
+                            conn.execute(text("ALTER TABLE users ADD COLUMN full_name VARCHAR(255) NOT NULL DEFAULT ''"))
+                        if "company_name" not in user_columns:
+                            conn.execute(text("ALTER TABLE users ADD COLUMN company_name VARCHAR(255) NOT NULL DEFAULT ''"))
+                        if "created_at" not in user_columns:
+                            conn.execute(text("ALTER TABLE users ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP"))
+                    conn.commit()
                 else:
                     conn.execute(text("ALTER TABLE shipments ADD COLUMN IF NOT EXISTS user_id VARCHAR(64)"))
+                    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS hashed_password VARCHAR(255) NOT NULL DEFAULT ''"))
+                    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(255) NOT NULL DEFAULT ''"))
+                    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS company_name VARCHAR(255) NOT NULL DEFAULT ''"))
+                    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"))
                     conn.commit()
             except Exception:
                 conn.rollback()
