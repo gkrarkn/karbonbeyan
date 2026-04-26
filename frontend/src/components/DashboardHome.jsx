@@ -356,9 +356,9 @@ function DashboardHome({
             {reportTitle}
           </h3>
           <p className="mt-3 text-sm leading-6 text-slate-600">{reportBody}</p>
-          <button type="button" onClick={onStartReport} className="btn-primary mt-6">
+          <a href="/sample-cbam-report.pdf" target="_blank" rel="noreferrer" className="btn-primary mt-6 inline-flex">
             {reportCta}
-          </button>
+          </a>
           <p className="mt-3 text-xs font-semibold text-slate-500">
             {reportCtaHint}
           </p>
