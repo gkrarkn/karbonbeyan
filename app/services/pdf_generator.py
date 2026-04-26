@@ -594,10 +594,7 @@ def _draw_page_header(
     page_title: str | None = None,
 ) -> float:
     y = height - 18 * mm
-    pdf.setStrokeColor(colors.HexColor("#1F2937"))
     pdf.setFillColor(colors.black)
-    pdf.setLineWidth(1)
-    pdf.line(margin, y - 4 * mm, width - margin, y - 4 * mm)
 
     logo_w = 62 * mm
     logo_h = 19 * mm
@@ -614,7 +611,12 @@ def _draw_page_header(
         f"Definitive regime reference year: {record.payload.reporting.declaration_year}",
     )
     pdf.drawRightString(width - margin, y - 14.5 * mm, f"Record ID: {record.shipment_id}")
-    return y - 23 * mm
+
+    separator_y = y - logo_h - 3 * mm
+    pdf.setStrokeColor(colors.HexColor("#D1D5DB"))
+    pdf.setLineWidth(0.7)
+    pdf.line(margin, separator_y, width - margin, separator_y)
+    return y - 26 * mm
 
 
 def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "generated") -> str:
