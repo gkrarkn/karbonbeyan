@@ -15,7 +15,7 @@ export function getMenuItems(locale) {
   if (locale === "en") {
     return [
       { id: "dashboard", label: "Overview", hint: "Status summary" },
-      { id: "yeni-rapor", label: "Workflow", hint: "Start a CBAM process" },
+      { id: "yeni-rapor", label: "Workflow", hint: "Create your first CBAM cost calculation" },
       { id: "arsiv", label: "Archive", hint: "Past reports" },
       { id: "ayarlar", label: "Plans", hint: "Trial, RBAC and limits" },
     ];
@@ -23,7 +23,7 @@ export function getMenuItems(locale) {
 
   return [
     { id: "dashboard", label: "Genel Bakış", hint: "Durum özeti" },
-    { id: "yeni-rapor", label: "Uyum Akışı", hint: "CBAM sürecini başlat" },
+    { id: "yeni-rapor", label: "Uyum Akışı", hint: "İlk CBAM maliyet hesabınızı oluşturun" },
     { id: "arsiv", label: "Arşiv", hint: "Geçmiş raporlar" },
     { id: "ayarlar", label: "Planlar", hint: "Trial, RBAC ve limitler" },
   ];
