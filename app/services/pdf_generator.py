@@ -520,6 +520,123 @@ def _draw_quality_row(
     return y - height - 1.4 * mm
 
 
+def _default_risk_label(record: ShipmentRecord) -> tuple[str, object, object]:
+    default_share_pct = round(record.calculation.data_quality_summary.default_share * 100)
+    is_en = _is_english(record)
+    if default_share_pct >= 67:
+        return (
+            "Very high risk" if is_en else "Çok yüksek risk",
+            RED_BG,
+            RED_TEXT,
+        )
+    if default_share_pct >= 34:
+        return (
+            "High risk" if is_en else "Yüksek risk",
+            YELLOW_BG,
+            YELLOW_TEXT,
+        )
+    if default_share_pct > 0:
+        return (
+            "Medium risk" if is_en else "Orta risk",
+            YELLOW_BG,
+            YELLOW_TEXT,
+        )
+    return (
+        "Low risk" if is_en else "Düşük risk",
+        GREEN_BG,
+        GREEN_TEXT,
+    )
+
+
+def _financial_impact_message(record: ShipmentRecord) -> str:
+    default_share = record.calculation.data_quality_summary.default_share
+    if default_share > 0:
+        return _pdf_text(
+            record,
+            "Potansiyel CBAM maliyet etkisi eksik veya tahmini veri nedeniyle net hesaplanamıyor.",
+            "Potential CBAM cost impact unknown due to missing or default data.",
+        )
+    return _pdf_text(
+        record,
+        "Maliyet etkisi, EU CBAM sertifika fiyatı eklendiğinde netleştirilebilir.",
+        "Cost impact can be finalized when the EU CBAM certificate price is added.",
+    )
+
+
+def _draw_financial_impact_panel(
+    pdf: canvas.Canvas,
+    record: ShipmentRecord,
+    x: float,
+    y: float,
+    width: float,
+) -> float:
+    panel_height = 31 * mm
+    gap = 4 * mm
+    card_w = (width - gap) / 2
+    default_share_pct = round(record.calculation.data_quality_summary.default_share * 100)
+    risk_label, risk_fill, risk_text = _default_risk_label(record)
+
+    _draw_box(pdf, x, y, width, panel_height, _pdf_text(record, "Maliyet ve Default Veri Riski", "Financial Impact and Default Risk"))
+
+    card_y = y - 7 * mm
+    card_h = 20 * mm
+    for card_x in (x + 3 * mm, x + 3 * mm + card_w + gap):
+        pdf.setFillColor(SLATE_BG)
+        pdf.setStrokeColor(colors.HexColor("#E5E7EB"))
+        pdf.roundRect(card_x, card_y - card_h, card_w - 3 * mm, card_h, 2.3 * mm, stroke=1, fill=1)
+
+    left_x = x + 6 * mm
+    left_w = card_w - 9 * mm
+    pdf.setFillColor(colors.HexColor("#111827"))
+    pdf.setFont(FONT_BOLD, 8.3)
+    pdf.drawString(left_x, card_y - 5 * mm, _pdf_text(record, "Maliyet Etkisi", "Financial Impact"))
+    _draw_wrapped_text(
+        pdf,
+        _financial_impact_message(record),
+        left_x,
+        card_y - 10 * mm,
+        left_w,
+        font_name=FONT_REGULAR,
+        font_size=6.8,
+        line_gap=2.8 * mm,
+    )
+
+    right_x = x + 6 * mm + card_w + gap
+    right_w = card_w - 9 * mm
+    pdf.setFillColor(colors.HexColor("#111827"))
+    pdf.setFont(FONT_BOLD, 8.3)
+    pdf.drawString(right_x, card_y - 5 * mm, _pdf_text(record, "Default Veri Riski", "Default Risk Score"))
+    pdf.setFillColor(risk_text)
+    pdf.setFont(FONT_BOLD, 8)
+    pdf.drawRightString(right_x + right_w, card_y - 5 * mm, f"{default_share_pct}% · {risk_label}")
+
+    bar_y = card_y - 11 * mm
+    bar_h = 3.8 * mm
+    pdf.setFillColor(colors.HexColor("#E5E7EB"))
+    pdf.setStrokeColor(colors.HexColor("#E5E7EB"))
+    pdf.roundRect(right_x, bar_y - bar_h, right_w, bar_h, 1.8 * mm, stroke=0, fill=1)
+    pdf.setFillColor(risk_text)
+    fill_w = max(2 * mm, right_w * default_share_pct / 100)
+    if default_share_pct == 0:
+        fill_w = 2 * mm
+    pdf.roundRect(right_x, bar_y - bar_h, fill_w, bar_h, 1.8 * mm, stroke=0, fill=1)
+
+    pdf.setFillColor(risk_text)
+    pdf.setFont(FONT_REGULAR, 6.6)
+    _draw_wrapped_text(
+        pdf,
+        _default_dependency_message(record),
+        right_x,
+        card_y - 17 * mm,
+        right_w,
+        font_name=FONT_REGULAR,
+        font_size=6.6,
+        line_gap=2.6 * mm,
+    )
+
+    return y - panel_height - 4 * mm
+
+
 def _draw_action_quality_panel(
     pdf: canvas.Canvas,
     record: ShipmentRecord,
@@ -732,6 +849,8 @@ def build_cbam_declaration_pdf(record: ShipmentRecord, output_dir: str = "genera
         + f": EUR {record.payload.carbon_price.carbon_price_paid_eur:.2f}",
     )
     y = table_y - table_h - 4 * mm
+
+    y = _draw_financial_impact_panel(pdf, record, margin, y, width - 2 * margin)
 
     y = _draw_action_quality_panel(pdf, record, margin, y, width - 2 * margin)
 
