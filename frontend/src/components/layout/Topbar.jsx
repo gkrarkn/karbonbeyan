@@ -22,6 +22,11 @@ function Topbar({
   const profileName = currentUser?.company_name || currentUser?.full_name || currentUser?.email || t(locale, "KarbonBeyan Hesabı", "KarbonBeyan Workspace");
   const profileSub = currentUser?.email || translateRole(locale, workspaceAccess?.role_label || t(locale, "Kurumsal çalışma alanı", "Corporate workspace"));
   const profileInitials = profileName.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+  const accessBadge = workspaceAccess?.trial_status === "active"
+    ? t(locale, `${workspaceAccess.trial_days_remaining} gün full trial aktif`, `${workspaceAccess.trial_days_remaining} day full trial active`)
+    : workspaceAccess?.active_plan === "none"
+      ? t(locale, "Trial doldu · aktif plan yok", "Trial expired · no active plan")
+      : `${translateRole(locale, workspaceAccess?.role_label)} · ${workspaceAccess?.active_plan}`;
 
   return (
     <header className="panel mb-6 flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
@@ -30,9 +35,7 @@ function Topbar({
         <p className="text-sm font-semibold text-slate-600">{titleMap[activeView] || titleMap.dashboard}</p>
         {currentUser && workspaceAccess ? (
           <div className="inline-flex w-fit items-center rounded-full bg-[#0E4FAF]/8 px-3 py-0.5 text-xs font-semibold text-[#0E4FAF]">
-            {workspaceAccess.trial_status === "active"
-              ? t(locale, `${workspaceAccess.trial_days_remaining} gün full trial aktif`, `${workspaceAccess.trial_days_remaining} day full trial active`)
-              : `${translateRole(locale, workspaceAccess.role_label)} · ${workspaceAccess.active_plan}`}
+            {accessBadge}
           </div>
         ) : null}
       </div>

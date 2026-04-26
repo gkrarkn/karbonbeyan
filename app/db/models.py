@@ -18,6 +18,8 @@ class UserORM(Base):
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     company_name: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    active_plan: Mapped[str] = mapped_column(String(32), nullable=False, default="")
+    subscription_status: Mapped[str] = mapped_column(String(32), nullable=False, default="trial")
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
 

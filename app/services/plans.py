@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
+from math import ceil
+
+from app.models.auth import UserRecord
 from app.models.cbam import (
     PlanCatalogResponse,
     PlanFeatureRecord,
@@ -39,7 +43,36 @@ PLAN_FEATURES = {
 }
 
 
-def get_plan_catalog(reports_count: int = 0) -> PlanCatalogResponse:
+def _aware_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def get_trial_days_remaining(user: UserRecord | None, now: datetime | None = None) -> int:
+    if not user:
+        return TRIAL_DAYS
+    current_time = now or datetime.now(timezone.utc)
+    trial_ends_at = _aware_utc(user.created_at) + timedelta(days=TRIAL_DAYS)
+    remaining_seconds = (trial_ends_at - current_time).total_seconds()
+    if remaining_seconds <= 0:
+        return 0
+    return min(TRIAL_DAYS, ceil(remaining_seconds / 86400))
+
+
+def is_trial_active(user: UserRecord | None, now: datetime | None = None) -> bool:
+    return get_trial_days_remaining(user, now=now) > 0
+
+
+def is_paid_subscription_active(user: UserRecord | None) -> bool:
+    return bool(
+        user
+        and user.subscription_status == "active"
+        and user.active_plan in {"starter", "growth", "pro"}
+    )
+
+
+def get_plan_catalog(reports_count: int = 0, user: UserRecord | None = None) -> PlanCatalogResponse:
     starter_features = [
         PLAN_FEATURES["archive_filters"],
     ]
@@ -92,23 +125,49 @@ def get_plan_catalog(reports_count: int = 0) -> PlanCatalogResponse:
         ),
     ]
 
+    trial_days_remaining = get_trial_days_remaining(user)
+    trial_active = trial_days_remaining > 0
+    paid_active = is_paid_subscription_active(user)
+    paid_plan = user.active_plan if paid_active else ""
+    paid_plan_record = next((plan for plan in plans if plan.plan_id == paid_plan), None)
+
+    if trial_active:
+        accessible_feature_keys = [feature.key for feature in pro_features]
+        usage_limits = {
+            "reports_per_month": 25,
+            "supplier_requests": 15,
+            "team_members": 10,
+        }
+        active_plan = "trial"
+        trial_status = "active"
+    elif paid_plan_record:
+        accessible_feature_keys = [feature.key for feature in paid_plan_record.features]
+        usage_limits = paid_plan_record.usage_limits
+        active_plan = paid_plan_record.plan_id
+        trial_status = "expired"
+    else:
+        accessible_feature_keys = []
+        usage_limits = {
+            "reports_per_month": 0,
+            "supplier_requests": 0,
+            "team_members": 1,
+        }
+        active_plan = "none"
+        trial_status = "expired"
+
     current_access = WorkspaceAccessRecord(
         role="company_admin",
         role_label="Firma Yöneticisi",
-        active_plan="growth",
-        trial_status="active",
-        trial_days_remaining=7,
-        accessible_feature_keys=[feature.key for feature in pro_features],
+        active_plan=active_plan,
+        trial_status=trial_status,
+        trial_days_remaining=trial_days_remaining,
+        accessible_feature_keys=accessible_feature_keys,
         usage_counters={
             "reports_per_month": reports_count,
             "supplier_requests": 0,
             "team_members": 1,
         },
-        usage_limits={
-            "reports_per_month": 25,
-            "supplier_requests": 15,
-            "team_members": 10,
-        },
+        usage_limits=usage_limits,
         can_manage_billing=True,
     )
 
@@ -117,3 +176,14 @@ def get_plan_catalog(reports_count: int = 0) -> PlanCatalogResponse:
         current_access=current_access,
         plans=plans,
     )
+
+
+def can_create_report(user: UserRecord, reports_count: int) -> bool:
+    access = get_plan_catalog(reports_count=reports_count, user=user).current_access
+    limit = access.usage_limits.get("reports_per_month", 0)
+    return limit > 0 and reports_count < limit
+
+
+def can_download_report(user: UserRecord) -> bool:
+    access = get_plan_catalog(user=user).current_access
+    return access.usage_limits.get("reports_per_month", 0) > 0

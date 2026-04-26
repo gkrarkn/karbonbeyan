@@ -22,6 +22,8 @@ class UserRepository:
             email=row.email,
             full_name=row.full_name,
             company_name=row.company_name,
+            active_plan=row.active_plan,
+            subscription_status=row.subscription_status,
             created_at=row.created_at,
         )
 
@@ -33,6 +35,8 @@ class UserRepository:
                 hashed_password=hash_password(password),
                 full_name=full_name,
                 company_name=company_name,
+                active_plan="",
+                subscription_status="trial",
                 created_at=datetime.now(timezone.utc),
             )
             session.add(row)

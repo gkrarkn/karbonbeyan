@@ -46,6 +46,10 @@ class ShipmentRepository:
                             conn.execute(text("ALTER TABLE users ADD COLUMN full_name VARCHAR(255) NOT NULL DEFAULT ''"))
                         if "company_name" not in user_columns:
                             conn.execute(text("ALTER TABLE users ADD COLUMN company_name VARCHAR(255) NOT NULL DEFAULT ''"))
+                        if "active_plan" not in user_columns:
+                            conn.execute(text("ALTER TABLE users ADD COLUMN active_plan VARCHAR(32) NOT NULL DEFAULT ''"))
+                        if "subscription_status" not in user_columns:
+                            conn.execute(text("ALTER TABLE users ADD COLUMN subscription_status VARCHAR(32) NOT NULL DEFAULT 'trial'"))
                         if "created_at" not in user_columns:
                             conn.execute(text("ALTER TABLE users ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP"))
                     conn.commit()
@@ -54,6 +58,8 @@ class ShipmentRepository:
                     conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS hashed_password VARCHAR(255) NOT NULL DEFAULT ''"))
                     conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(255) NOT NULL DEFAULT ''"))
                     conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS company_name VARCHAR(255) NOT NULL DEFAULT ''"))
+                    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS active_plan VARCHAR(32) NOT NULL DEFAULT ''"))
+                    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(32) NOT NULL DEFAULT 'trial'"))
                     conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"))
                     conn.commit()
             except Exception:

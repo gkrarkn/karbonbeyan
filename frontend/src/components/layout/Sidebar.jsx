@@ -57,8 +57,8 @@ function Sidebar({ activeView, onChangeView, workspaceAccess, locale }) {
                 )
               : t(
                   locale,
-                  "Trial süresi tamamlandığında plan ve kullanım limiti bazlı erişim devreye girer.",
-                  "When the trial ends, access rules switch to plan-based permissions and usage limits.",
+                  "Trial süresi doldu. Rapor çıktısı için aktif plan gerekir.",
+                  "Trial expired. An active plan is required for report output.",
                 )}
           </p>
         </div>

@@ -223,6 +223,12 @@ function DashboardHome({
   const howItWorksTitle = activeLocale === "en"
     ? "Cost and risk visibility in three steps"
     : "Üç adımda maliyet ve risk görünürlüğü";
+  const trialStatusText = workspaceAccess?.trial_status === "active"
+    ? t(locale, `${workspaceAccess.trial_days_remaining} gün full erişim`, `${workspaceAccess.trial_days_remaining} days full access`)
+    : t(locale, "Trial süresi doldu", "Trial expired");
+  const accessLevelText = workspaceAccess?.active_plan === "none"
+    ? t(locale, "Aktif plan yok", "No active plan")
+    : (workspaceAccess?.active_plan || "trial").toUpperCase();
 
   return (
     <div className="space-y-6">
@@ -292,17 +298,19 @@ function DashboardHome({
             <div className="rounded-3xl bg-white/10 p-4 backdrop-blur">
               <div className="text-xs uppercase tracking-[0.24em] text-white/60">{t(locale, "Trial Durumu", "Trial Status")}</div>
               <div className="mt-2 text-xl font-extrabold">
-                {workspaceAccess?.trial_status === "active" ? t(locale, `${workspaceAccess.trial_days_remaining} gün full erişim`, `${workspaceAccess.trial_days_remaining} days full access`) : t(locale, "Plan bazlı erişim aktif", "Plan-based access active")}
+                {trialStatusText}
               </div>
               <div className="mt-2 text-sm text-white/75">
-                {t(locale, "Supplier Data Collection dahil tüm Pro modüller şu an açık.", "All Pro modules, including Supplier Data Collection, are currently enabled.")}
+                {workspaceAccess?.trial_status === "active"
+                  ? t(locale, "Supplier Data Collection dahil tüm Pro modüller şu an açık.", "All Pro modules, including Supplier Data Collection, are currently enabled.")
+                  : t(locale, "Rapor çıktısı almak için aktif bir plan gerekir.", "An active plan is required to generate report outputs.")}
               </div>
             </div>
             <div className="rounded-3xl bg-white/10 p-4 backdrop-blur">
               <div className="text-xs uppercase tracking-[0.24em] text-white/60">{t(locale, "Yetki ve Plan", "Access and Plan")}</div>
               <div className="mt-2 text-xl font-extrabold">{translateRole(locale, workspaceAccess?.role_label || t(locale, "Firma Yöneticisi", "Company Admin"))}</div>
               <div className="mt-2 text-sm text-white/75">
-                {t(locale, "Aktif seviye", "Current level")}: {(workspaceAccess?.active_plan || "growth").toUpperCase()}
+                {t(locale, "Aktif seviye", "Current level")}: {accessLevelText}
               </div>
             </div>
           </div>

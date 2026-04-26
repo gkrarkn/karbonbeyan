@@ -22,6 +22,8 @@ class UserRecord(BaseModel):
     email: str
     full_name: str
     company_name: str
+    active_plan: str = ""
+    subscription_status: str = "trial"
     created_at: datetime
 
 
