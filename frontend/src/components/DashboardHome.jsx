@@ -153,7 +153,7 @@ function DashboardHome({
       audience: t(locale, "Küçük ve orta ölçekli ihracatçılar için", "For small and mid-sized exporters"),
       value: t(
         locale,
-        "CBAM sürecinizi tek panelde takip etmeye başlayın.",
+        "CBAM/SKDM sürecinizi tek panelde takip etmeye başlayın.",
         "Start tracking your CBAM process from one panel.",
       ),
       features: [
@@ -193,7 +193,7 @@ function DashboardHome({
       audience: t(locale, "Kurumsal yapı ve çok kullanıcılı ekipler için", "For enterprise teams and multi-user operations"),
       value: t(
         locale,
-        "Kurumsal ölçekte CBAM sürecini yönetin.",
+        "Kurumsal ölçekte CBAM/SKDM sürecini yönetin.",
         "Manage your CBAM process at enterprise scale.",
       ),
       features: [
@@ -213,7 +213,7 @@ function DashboardHome({
   };
   const howItWorksLabel = activeLocale === "en" ? "How It Works" : "Nasıl Çalışır";
   const outputLabel = activeLocale === "en" ? "Output" : "Çıktı";
-  const reportTitle = activeLocale === "en" ? "What Does a CBAM Report Look Like?" : "CBAM Raporu Nasıl Görünüyor?";
+  const reportTitle = activeLocale === "en" ? "What Does a CBAM Report Look Like?" : "CBAM/SKDM Raporu Nasıl Görünüyor?";
   const reportBody = activeLocale === "en"
     ? "See missing data, risky records and estimated calculations in one report."
     : "Eksik verileri, riskli kayıtları ve tahmini hesaplamaları tek raporda görün.";
@@ -237,7 +237,7 @@ function DashboardHome({
           <div>
             <BrandLogo locale={locale} className="rounded-2xl bg-white px-3 py-2" />
             <div className="mt-5 inline-flex rounded-full bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/80">
-              {t(locale, "CBAM = Karbon Sınır Düzenleme Mekanizması", "CBAM = Carbon Border Adjustment Mechanism")}
+              {t(locale, "CBAM/SKDM = Sınırda Karbon Düzenleme Mekanizması", "CBAM = Carbon Border Adjustment Mechanism")}
             </div>
             <h2 className="mt-3 text-3xl font-extrabold">
               {t(
@@ -249,7 +249,7 @@ function DashboardHome({
             <p className="mt-3 max-w-2xl text-sm text-white/75">
               {t(
                 locale,
-                "Tahmini (default) değerlerle ilerliyorsanız CBAM maliyetiniz gerçeği yansıtmayabilir.",
+                "Tahmini (default) değerlerle ilerliyorsanız CBAM/SKDM maliyetiniz gerçeği yansıtmayabilir.",
                 "If you rely on default values, your CBAM cost may be inaccurate.",
               )}
             </p>
@@ -288,7 +288,7 @@ function DashboardHome({
             <div className="mt-4 inline-flex rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white/85">
               {t(
                 locale,
-                "Tahmini değer kullanımı CBAM maliyetinizin gerçeği yansıtmamasına neden olabilir.",
+                "Tahmini değer kullanımı CBAM/SKDM maliyetinizin gerçeği yansıtmamasına neden olabilir.",
                 "If you rely on default values, your CBAM cost may be inaccurate.",
               )}
             </div>
@@ -361,7 +361,7 @@ function DashboardHome({
         <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr] xl:items-center">
           <div>
             <div className="text-sm font-semibold text-[#0E4FAF]">
-              {t(locale, "Resmi CBAM Kayıt Sistemi Öncesi", "Before the Official CBAM Registry")}
+              {t(locale, "Resmi CBAM/SKDM Kayıt Sistemi Öncesi", "Before the Official CBAM Registry")}
             </div>
             <h3 className="mt-2 text-3xl font-extrabold text-ink">
               {t(
@@ -373,7 +373,7 @@ function DashboardHome({
             <p className="mt-3 text-sm leading-6 text-slate-600">
               {t(
                 locale,
-                "Avrupa Komisyonu, CBAM Kayıt Sistemi ile AB ithalatçılarının beyan sürecini ve AB dışı tesis operatörlerinin emisyon verisi paylaşımını resmi sisteme taşıyor.",
+                "Avrupa Komisyonu, CBAM/SKDM Kayıt Sistemi ile AB ithalatçılarının beyan sürecini ve AB dışı tesis operatörlerinin emisyon verisi paylaşımını resmi sisteme taşıyor.",
                 "The European Commission is moving CBAM declaration workflows and non-EU installation emissions data sharing into the official CBAM Registry.",
               )}
             </p>
@@ -423,7 +423,7 @@ function DashboardHome({
         <p className="mt-5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs leading-5 text-slate-500">
           {t(
             locale,
-            "Not: KarbonBeyan resmi CBAM Kayıt Sistemi, yetkilendirme modülü veya Komisyon beyan sistemi değildir. Amaç, resmi giriş öncesinde veri kalitesi, varsayılan değer riski ve maliyet görünürlüğünü kontrol etmektir.",
+            "Not: KarbonBeyan resmi CBAM/SKDM Kayıt Sistemi, yetkilendirme modülü veya Komisyon beyan sistemi değildir. Amaç, resmi giriş öncesinde veri kalitesi, varsayılan değer riski ve maliyet görünürlüğünü kontrol etmektir.",
             "Note: KarbonBeyan is not the official CBAM Registry, authorisation module or Commission declaration system. Its purpose is to check data quality, default-value risk and cost visibility before official submission.",
           )}
         </p>
@@ -438,7 +438,7 @@ function DashboardHome({
             <h3 className="mt-2 text-3xl font-extrabold text-ink">
               {t(
                 locale,
-                "Varsayılan değer, CBAM maliyet etkisini yanıltıcı gösterebilir",
+                "Varsayılan değer, CBAM/SKDM maliyet etkisini yanıltıcı gösterebilir",
                 "Default values can distort CBAM cost exposure",
               )}
             </h3>
@@ -509,7 +509,7 @@ function DashboardHome({
             <p className="mt-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs leading-5 text-slate-500">
               {t(
                 locale,
-                "Not: Bu örnek yalnızca bilgilendirme amaçlıdır; resmi vergi, beyan veya hukuki danışmanlık niteliği taşımaz. Nihai CBAM yükümlülüğü yürürlükteki mevzuat, doğrulanmış üretici verileri ve yetkili kurum değerlendirmelerine göre belirlenir.",
+                "Not: Bu örnek yalnızca bilgilendirme amaçlıdır; resmi vergi, beyan veya hukuki danışmanlık niteliği taşımaz. Nihai CBAM/SKDM yükümlülüğü yürürlükteki mevzuat, doğrulanmış üretici verileri ve yetkili kurum değerlendirmelerine göre belirlenir.",
                 "Note: This example is for informational purposes only and does not constitute official tax, declaration or legal advice. Final CBAM obligations depend on applicable regulation, verified producer data and competent authority assessment.",
               )}
             </p>
@@ -565,7 +565,7 @@ function DashboardHome({
           <p className="mt-3 max-w-3xl text-sm text-slate-600">
             {t(
               locale,
-              "Kendi verinizle daha doğru maliyet görünürlüğü elde edin, eksikleri erken görün ve CBAM sürecinizi tek yerden yönetin.",
+              "Kendi verinizle daha doğru maliyet görünürlüğü elde edin, eksikleri erken görün ve CBAM/SKDM sürecinizi tek yerden yönetin.",
               "Use your own data for more accurate cost visibility, see missing fields early and manage your CBAM process from one place.",
             )}
           </p>

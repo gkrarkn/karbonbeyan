@@ -23,7 +23,7 @@ export function getMenuItems(locale) {
 
   return [
     { id: "dashboard", label: "Genel Bakış", hint: "Durum özeti" },
-    { id: "yeni-rapor", label: "Uyum Akışı", hint: "İlk CBAM maliyet hesabınızı oluşturun" },
+    { id: "yeni-rapor", label: "Uyum Akışı", hint: "İlk CBAM/SKDM maliyet hesabınızı oluşturun" },
     { id: "arsiv", label: "Arşiv", hint: "Geçmiş raporlar" },
     { id: "ayarlar", label: "Planlar", hint: "Trial, RBAC ve limitler" },
   ];

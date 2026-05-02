@@ -529,7 +529,7 @@ function AuthRequiredView({ locale, onSignUp, onLogin }) {
     <div className="panel p-6">
       <div className="text-sm font-semibold text-slate-500">{t(locale, "Uyum Akışı", "Workflow")}</div>
       <h2 className="mt-1 text-2xl font-extrabold text-ink">
-        {t(locale, "İlk CBAM maliyet hesabınızı oluşturmak için giriş yapın", "Sign in to create your first CBAM cost calculation")}
+        {t(locale, "İlk CBAM/SKDM maliyet hesabınızı oluşturmak için giriş yapın", "Sign in to create your first CBAM cost calculation")}
       </h2>
       <p className="mt-2 max-w-2xl text-sm text-slate-600">
         {t(

@@ -13,7 +13,7 @@ function Topbar({
   onLocaleChange,
 }) {
   const titleMap = {
-    dashboard: t(locale, "CBAM Uyum Sürecinizi Yönetin ve Riskinizi Görün", "Manage Your CBAM Process and See Your Risk"),
+    dashboard: t(locale, "CBAM/SKDM Uyum Sürecinizi Yönetin ve Riskinizi Görün", "Manage Your CBAM Process and See Your Risk"),
     "yeni-rapor": t(locale, "Uyum Akışı", "Workflow"),
     arsiv: t(locale, "Arşiv", "Archive"),
     ayarlar: t(locale, "Plan ve Yetkilendirme", "Plans and Access"),

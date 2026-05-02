@@ -11,7 +11,7 @@ function Sidebar({ activeView, onChangeView, workspaceAccess, locale }) {
         <div className="rounded-3xl bg-white/8 p-5">
           <div className="text-xs uppercase tracking-[0.28em] text-white/60">KarbonBeyan Vision</div>
           <div className="mt-3 text-2xl font-extrabold leading-tight">
-            {t(locale, "CBAM uyum sürecinizi", "Manage your CBAM process")}
+            {t(locale, "CBAM/SKDM uyum sürecinizi", "Manage your CBAM process")}
             <span className="block text-sand">yönetin ve riskinizi görün</span>
           </div>
           <p className="mt-3 text-sm text-white/72">
