@@ -357,6 +357,87 @@ function DashboardHome({
         </div>
       </section>
 
+      <section className="panel overflow-hidden p-6">
+        <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr] xl:items-center">
+          <div>
+            <div className="text-sm font-semibold text-[#0E4FAF]">
+              {t(locale, "Örnek Maliyet Farkı", "Example Cost Difference")}
+            </div>
+            <h3 className="mt-2 text-3xl font-extrabold text-ink">
+              {t(
+                locale,
+                "Default veri, CBAM maliyet etkisini yanıltıcı gösterebilir",
+                "Default values can distort CBAM cost exposure",
+              )}
+            </h3>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              {t(
+                locale,
+                "Aşağıdaki senaryo örnek amaçlıdır. Gerçek fark; ürün, üretim rotası, menşe ülke, actual üretici verisi ve karbon fiyatına göre değişir.",
+                "The scenario below is illustrative. The actual gap depends on the product, production route, origin, actual producer data and carbon price.",
+              )}
+            </p>
+            <div className="mt-4 rounded-2xl bg-clay/10 px-4 py-3 text-sm font-semibold text-clay">
+              {t(
+                locale,
+                "Formül: sevkiyat miktarı x ton başına gömülü emisyon x karbon fiyatı",
+                "Formula: shipment volume x embedded emissions per tonne x carbon price",
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                  {t(locale, "Örnek: 100 ton çelik", "Example: 100 tonnes of steel")}
+                </div>
+                <div className="mt-1 text-sm font-semibold text-slate-600">
+                  {t(locale, "Varsayım: EUR 75 / tCO2e", "Assumption: EUR 75 / tCO2e")}
+                </div>
+              </div>
+              <div className="rounded-full bg-pine px-3 py-1 text-xs font-semibold text-white">
+                {t(locale, "Sevkiyat bazlı görünürlük", "Shipment-level visibility")}
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  {t(locale, "Default veriyle", "With default value")}
+                </div>
+                <div className="mt-2 text-2xl font-extrabold text-ink">EUR 20,025</div>
+                <div className="mt-2 text-sm text-slate-500">100 x 2.67 x 75</div>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  {t(locale, "Actual veriyle", "With actual data")}
+                </div>
+                <div className="mt-2 text-2xl font-extrabold text-ink">EUR 10,125</div>
+                <div className="mt-2 text-sm text-slate-500">100 x 1.35 x 75</div>
+              </div>
+              <div className="rounded-2xl border border-clay/20 bg-clay/10 p-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-clay">
+                  {t(locale, "Fark", "Difference")}
+                </div>
+                <div className="mt-2 text-2xl font-extrabold text-clay">EUR 9,900</div>
+                <div className="mt-2 text-sm font-semibold text-clay">
+                  {t(locale, "Yaklaşık %98 daha yüksek görünüm", "Approx. 98% higher exposure")}
+                </div>
+              </div>
+            </div>
+
+            <p className="mt-4 text-sm leading-6 text-slate-600">
+              {t(
+                locale,
+                "KarbonBeyan bu farkın kesin tutarını tek bir varsayımla söylemez; her sevkiyatta default veri kullanımını, veri güvenini ve maliyet etkisinin ne kadar güvenilir olduğunu raporlar.",
+                "KarbonBeyan does not present one assumption as the final amount; it reports default value reliance, data confidence and how reliable the cost exposure is for each shipment.",
+              )}
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className="panel grid gap-6 overflow-hidden p-6 xl:grid-cols-[0.9fr_1.1fr]">
         <div>
           <div className="text-sm font-semibold text-[#0E4FAF]">{outputLabel}</div>
