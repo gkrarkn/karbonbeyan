@@ -358,6 +358,78 @@ function DashboardHome({
       </section>
 
       <section className="panel overflow-hidden p-6">
+        <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr] xl:items-center">
+          <div>
+            <div className="text-sm font-semibold text-[#0E4FAF]">
+              {t(locale, "Resmi CBAM Registry Öncesi", "Before the Official CBAM Registry")}
+            </div>
+            <h3 className="mt-2 text-3xl font-extrabold text-ink">
+              {t(
+                locale,
+                "Resmi sisteme gitmeden önce veriniz hazır mı?",
+                "Is your data ready before it goes into the official system?",
+              )}
+            </h3>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              {t(
+                locale,
+                "Avrupa Komisyonu, CBAM Registry ile AB ithalatçılarının beyan sürecini ve AB dışı tesis operatörlerinin emisyon verisi paylaşımını resmi sisteme taşıyor.",
+                "The European Commission is moving CBAM declaration workflows and non-EU installation emissions data sharing into the official CBAM Registry.",
+              )}
+            </p>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              {t(
+                locale,
+                "KarbonBeyan bu resmi sistemin yerine geçmez; sevkiyat verinizin eksik mi, default değere mi düştüğünü ve maliyet etkisinin güvenilir olup olmadığını önceden gösterir.",
+                "KarbonBeyan does not replace the official system; it shows in advance whether shipment data is missing, whether default values are being used and whether the cost exposure is reliable.",
+              )}
+            </p>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            {[
+              {
+                title: t(locale, "Üretici verisi", "Producer data"),
+                body: t(
+                  locale,
+                  "AB dışı tesislerden actual emisyon verisi ve kanıt akışı beklenir.",
+                  "Actual emissions data and evidence are expected from non-EU installations.",
+                ),
+              },
+              {
+                title: t(locale, "Declarant hazırlığı", "Declarant readiness"),
+                body: t(
+                  locale,
+                  "EORI, tesis, CN kodu, miktar ve dönem bilgileri tutarlı olmalıdır.",
+                  "EORI, installation, CN code, quantity and period data need to be consistent.",
+                ),
+              },
+              {
+                title: t(locale, "Default riski", "Default risk"),
+                body: t(
+                  locale,
+                  "Eksik actual veri, maliyet etkisinin yanıltıcı görünmesine neden olabilir.",
+                  "Missing actual data can make cost exposure look misleading.",
+                ),
+              },
+            ].map((item) => (
+              <div key={item.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div className="text-sm font-extrabold text-ink">{item.title}</div>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{item.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <p className="mt-5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs leading-5 text-slate-500">
+          {t(
+            locale,
+            "Not: KarbonBeyan resmi CBAM Registry, yetkilendirme modülü veya Komisyon beyan sistemi değildir. Amaç, resmi giriş öncesinde veri kalitesi, default veri riski ve maliyet görünürlüğünü kontrol etmektir.",
+            "Note: KarbonBeyan is not the official CBAM Registry, authorisation module or Commission declaration system. Its purpose is to check data quality, default-value risk and cost visibility before official submission.",
+          )}
+        </p>
+      </section>
+
+      <section className="panel overflow-hidden p-6">
         <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr] xl:items-center">
           <div>
             <div className="text-sm font-semibold text-[#0E4FAF]">
