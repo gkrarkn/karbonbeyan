@@ -361,7 +361,7 @@ function DashboardHome({
         <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr] xl:items-center">
           <div>
             <div className="text-sm font-semibold text-[#0E4FAF]">
-              {t(locale, "Resmi CBAM Registry Öncesi", "Before the Official CBAM Registry")}
+              {t(locale, "Resmi CBAM Kayıt Sistemi Öncesi", "Before the Official CBAM Registry")}
             </div>
             <h3 className="mt-2 text-3xl font-extrabold text-ink">
               {t(
@@ -373,14 +373,14 @@ function DashboardHome({
             <p className="mt-3 text-sm leading-6 text-slate-600">
               {t(
                 locale,
-                "Avrupa Komisyonu, CBAM Registry ile AB ithalatçılarının beyan sürecini ve AB dışı tesis operatörlerinin emisyon verisi paylaşımını resmi sisteme taşıyor.",
+                "Avrupa Komisyonu, CBAM Kayıt Sistemi ile AB ithalatçılarının beyan sürecini ve AB dışı tesis operatörlerinin emisyon verisi paylaşımını resmi sisteme taşıyor.",
                 "The European Commission is moving CBAM declaration workflows and non-EU installation emissions data sharing into the official CBAM Registry.",
               )}
             </p>
             <p className="mt-3 text-sm leading-6 text-slate-600">
               {t(
                 locale,
-                "KarbonBeyan bu resmi sistemin yerine geçmez; sevkiyat verinizin eksik mi, default değere mi düştüğünü ve maliyet etkisinin güvenilir olup olmadığını önceden gösterir.",
+                "KarbonBeyan bu resmi sistemin yerine geçmez; sevkiyat verinizin eksik mi, varsayılan değere mi düştüğünü ve maliyet etkisinin güvenilir olup olmadığını önceden gösterir.",
                 "KarbonBeyan does not replace the official system; it shows in advance whether shipment data is missing, whether default values are being used and whether the cost exposure is reliable.",
               )}
             </p>
@@ -392,12 +392,12 @@ function DashboardHome({
                 title: t(locale, "Üretici verisi", "Producer data"),
                 body: t(
                   locale,
-                  "AB dışı tesislerden actual emisyon verisi ve kanıt akışı beklenir.",
+                  "AB dışı tesislerden gerçek emisyon verisi ve kanıt akışı beklenir.",
                   "Actual emissions data and evidence are expected from non-EU installations.",
                 ),
               },
               {
-                title: t(locale, "Declarant hazırlığı", "Declarant readiness"),
+                title: t(locale, "Beyan sahibi hazırlığı", "Declarant readiness"),
                 body: t(
                   locale,
                   "EORI, tesis, CN kodu, miktar ve dönem bilgileri tutarlı olmalıdır.",
@@ -405,10 +405,10 @@ function DashboardHome({
                 ),
               },
               {
-                title: t(locale, "Default riski", "Default risk"),
+                title: t(locale, "Varsayılan değer riski", "Default risk"),
                 body: t(
                   locale,
-                  "Eksik actual veri, maliyet etkisinin yanıltıcı görünmesine neden olabilir.",
+                  "Eksik gerçek veri, maliyet etkisinin yanıltıcı görünmesine neden olabilir.",
                   "Missing actual data can make cost exposure look misleading.",
                 ),
               },
@@ -423,7 +423,7 @@ function DashboardHome({
         <p className="mt-5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs leading-5 text-slate-500">
           {t(
             locale,
-            "Not: KarbonBeyan resmi CBAM Registry, yetkilendirme modülü veya Komisyon beyan sistemi değildir. Amaç, resmi giriş öncesinde veri kalitesi, default veri riski ve maliyet görünürlüğünü kontrol etmektir.",
+            "Not: KarbonBeyan resmi CBAM Kayıt Sistemi, yetkilendirme modülü veya Komisyon beyan sistemi değildir. Amaç, resmi giriş öncesinde veri kalitesi, varsayılan değer riski ve maliyet görünürlüğünü kontrol etmektir.",
             "Note: KarbonBeyan is not the official CBAM Registry, authorisation module or Commission declaration system. Its purpose is to check data quality, default-value risk and cost visibility before official submission.",
           )}
         </p>
@@ -438,14 +438,14 @@ function DashboardHome({
             <h3 className="mt-2 text-3xl font-extrabold text-ink">
               {t(
                 locale,
-                "Default veri, CBAM maliyet etkisini yanıltıcı gösterebilir",
+                "Varsayılan değer, CBAM maliyet etkisini yanıltıcı gösterebilir",
                 "Default values can distort CBAM cost exposure",
               )}
             </h3>
             <p className="mt-3 text-sm leading-6 text-slate-600">
               {t(
                 locale,
-                "Aşağıdaki senaryo örnek amaçlıdır. Gerçek fark; ürün, üretim rotası, menşe ülke, actual üretici verisi ve karbon fiyatına göre değişir.",
+                "Aşağıdaki senaryo örnek amaçlıdır. Gerçek fark; ürün, üretim rotası, menşe ülke, gerçek üretici verisi ve karbon fiyatına göre değişir.",
                 "The scenario below is illustrative. The actual gap depends on the product, production route, origin, actual producer data and carbon price.",
               )}
             </p>
@@ -476,14 +476,14 @@ function DashboardHome({
             <div className="mt-5 grid gap-3 md:grid-cols-3">
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  {t(locale, "Default veriyle", "With default value")}
+                  {t(locale, "Varsayılan değerle", "With default value")}
                 </div>
                 <div className="mt-2 text-2xl font-extrabold text-ink">EUR 20,121</div>
                 <div className="mt-2 text-sm text-slate-500">100 x 2.67 x 75.36</div>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  {t(locale, "Actual veriyle", "With actual data")}
+                  {t(locale, "Gerçek veriyle", "With actual data")}
                 </div>
                 <div className="mt-2 text-2xl font-extrabold text-ink">EUR 10,174</div>
                 <div className="mt-2 text-sm text-slate-500">100 x 1.35 x 75.36</div>
@@ -502,7 +502,7 @@ function DashboardHome({
             <p className="mt-4 text-sm leading-6 text-slate-600">
               {t(
                 locale,
-                "KarbonBeyan bu farkın kesin tutarını tek bir varsayımla söylemez; her sevkiyatta default veri kullanımını, veri güvenini ve maliyet etkisinin ne kadar güvenilir olduğunu raporlar.",
+                "KarbonBeyan bu farkın kesin tutarını tek bir varsayımla söylemez; her sevkiyatta varsayılan değer kullanımını, veri güvenini ve maliyet etkisinin ne kadar güvenilir olduğunu raporlar.",
                 "KarbonBeyan does not present one assumption as the final amount; it reports default value reliance, data confidence and how reliable the cost exposure is for each shipment.",
               )}
             </p>
@@ -560,7 +560,7 @@ function DashboardHome({
         <div>
           <div className="text-sm font-semibold text-[#0E4FAF]">{t(locale, "Fiyatlandırma", "Pricing")}</div>
           <h3 className="mt-2 text-3xl font-extrabold text-ink">
-            {t(locale, "Default veri riskini azaltan planı seçin", "Choose the plan that reduces default data risk")}
+            {t(locale, "Varsayılan değer riskini azaltan planı seçin", "Choose the plan that reduces default data risk")}
           </h3>
           <p className="mt-3 max-w-3xl text-sm text-slate-600">
             {t(
@@ -755,11 +755,11 @@ function DashboardHome({
 
             <div className="panel p-6">
               <div className="text-sm font-semibold text-slate-500">{t(locale, "Veri Güveni", "Data Confidence")}</div>
-              <h3 className="mt-1 text-xl font-bold text-ink">{t(locale, "Actual vs Default dağılımı", "Actual vs Default mix")}</h3>
+              <h3 className="mt-1 text-xl font-bold text-ink">{t(locale, "Gerçek veri / varsayılan değer dağılımı", "Actual vs Default mix")}</h3>
               <div className="mt-6 space-y-4">
                 {[
-                  { label: t(locale, "Actual alanlar", "Actual fields"), pct: avgActualShare, color: "bg-pine", textColor: "text-pine" },
-                  { label: t(locale, "Default alanlar", "Default fields"), pct: avgDefaultShare, color: "bg-clay", textColor: "text-clay" },
+                  { label: t(locale, "Gerçek veri alanları", "Actual fields"), pct: avgActualShare, color: "bg-pine", textColor: "text-pine" },
+                  { label: t(locale, "Varsayılan değer alanları", "Default fields"), pct: avgDefaultShare, color: "bg-clay", textColor: "text-clay" },
                 ].map((bar) => (
                   <div key={bar.label} className="rounded-2xl bg-mist p-4">
                     <div className="flex items-center justify-between">
