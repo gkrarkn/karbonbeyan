@@ -434,6 +434,13 @@ function DashboardHome({
                 "KarbonBeyan does not present one assumption as the final amount; it reports default value reliance, data confidence and how reliable the cost exposure is for each shipment.",
               )}
             </p>
+            <p className="mt-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs leading-5 text-slate-500">
+              {t(
+                locale,
+                "Not: Bu örnek yalnızca bilgilendirme amaçlıdır; resmi vergi, beyan veya hukuki danışmanlık niteliği taşımaz. Nihai CBAM yükümlülüğü yürürlükteki mevzuat, doğrulanmış üretici verileri ve yetkili kurum değerlendirmelerine göre belirlenir.",
+                "Note: This example is for informational purposes only and does not constitute official tax, declaration or legal advice. Final CBAM obligations depend on applicable regulation, verified producer data and competent authority assessment.",
+              )}
+            </p>
           </div>
         </div>
       </section>
