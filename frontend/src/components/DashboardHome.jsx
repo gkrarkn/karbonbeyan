@@ -393,7 +393,7 @@ function DashboardHome({
                   {t(locale, "Örnek: 100 ton çelik", "Example: 100 tonnes of steel")}
                 </div>
                 <div className="mt-1 text-sm font-semibold text-slate-600">
-                  {t(locale, "Varsayım: EUR 75 / tCO2e", "Assumption: EUR 75 / tCO2e")}
+                  {t(locale, "Q1 2026 sertifika fiyatı: EUR 75.36 / tCO2e", "Q1 2026 certificate price: EUR 75.36 / tCO2e")}
                 </div>
               </div>
               <div className="rounded-full bg-pine px-3 py-1 text-xs font-semibold text-white">
@@ -406,21 +406,21 @@ function DashboardHome({
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                   {t(locale, "Default veriyle", "With default value")}
                 </div>
-                <div className="mt-2 text-2xl font-extrabold text-ink">EUR 20,025</div>
-                <div className="mt-2 text-sm text-slate-500">100 x 2.67 x 75</div>
+                <div className="mt-2 text-2xl font-extrabold text-ink">EUR 20,121</div>
+                <div className="mt-2 text-sm text-slate-500">100 x 2.67 x 75.36</div>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                   {t(locale, "Actual veriyle", "With actual data")}
                 </div>
-                <div className="mt-2 text-2xl font-extrabold text-ink">EUR 10,125</div>
-                <div className="mt-2 text-sm text-slate-500">100 x 1.35 x 75</div>
+                <div className="mt-2 text-2xl font-extrabold text-ink">EUR 10,174</div>
+                <div className="mt-2 text-sm text-slate-500">100 x 1.35 x 75.36</div>
               </div>
               <div className="rounded-2xl border border-clay/20 bg-clay/10 p-4">
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-clay">
                   {t(locale, "Fark", "Difference")}
                 </div>
-                <div className="mt-2 text-2xl font-extrabold text-clay">EUR 9,900</div>
+                <div className="mt-2 text-2xl font-extrabold text-clay">EUR 9,948</div>
                 <div className="mt-2 text-sm font-semibold text-clay">
                   {t(locale, "Yaklaşık %98 daha yüksek görünüm", "Approx. 98% higher exposure")}
                 </div>
